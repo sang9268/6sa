@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, render_template  # ✅ 추가됨
 
 app = Flask(__name__)
 
