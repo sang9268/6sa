@@ -404,20 +404,23 @@
 
   <style>
 
-    body {
+/* 페이지 전반 배경을 옅은 분홍색으로 설정 */
+body {
   font-family: Arial, sans-serif;
   padding: 20px;
   background-color: #ffe6f0;
 }
+
+/* 작성 페이지 폭을 화면 전체로 유지 */
 .login-container,
 #service-container {
-  max-width: 1000px;
-  margin: auto;
+  width: calc(100% - 40px); /* body padding 20px씩 제외 */
+  margin: 0 auto;
   background: #fff;
   padding: 20px;
   border-radius: 8px;
 }
-    
+
     
     /* 로그인 박스 디자인 */
     .login-container {
