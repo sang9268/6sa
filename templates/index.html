@@ -354,6 +354,12 @@ function onContentChange(id, text) {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
+    /* ‘내용’ 입력 칼럼(테이블 4번째 칼럼) 글자 크게 */
+#logTable td:nth-child(4),
+#logTable th:nth-child(4) {
+  font-size: 1.2rem;    /* 원하시는 크기로 조정하세요 */
+  line-height: 1.4;     /* 필요시 줄간격도 조절 */
+}
 
     .logout {
       background-color: #9C27B0;
