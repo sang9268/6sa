@@ -58,9 +58,6 @@
       }
     }
 
-  
-    
-
 
     // 로그아웃 함수
     function logout() {
@@ -68,6 +65,41 @@
       checkLogin();
     }
 
+    /**
+ * 내용 셀 수정 후 호출됩니다.
+ * @param {string} id    - Firestore 문서 ID
+ * @param {string} text  - 입력된 내용
+ */
+function onContentChange(id, text) {
+  // 내용이 비어있으면 아무 것도 안 함
+  if (!text.trim()) return;
+
+  const now = new Date();
+  // YYYY-MM-DD 포맷
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+  ].join('-');
+  // HH:MM:SS 포맷
+  const time = [
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0')
+  ].join(':');
+
+  // Firestore에 한꺼번에 업데이트
+  tableRef.doc(id).update({
+    content: text,
+    date: date,
+    time: time
+  }).then(() => {
+    loadTable();  // UI 새로고침
+  });
+}
+
+
+    
     // 알람 상태 리스너
     function listenToAlarmStatus() {
       alarmRef.onSnapshot(doc => {
@@ -130,7 +162,7 @@
             <td><input type="checkbox" /></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'content', this.innerText)">${data.content || ''}</td>
+            <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'sender', this.innerText)">${data.sender || ''}</td>
             ${receivers.map(rcv => `
               <td>
