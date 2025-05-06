@@ -135,7 +135,7 @@
             ${receivers.map(rcv => `
               <td>
                 <button onclick="toggleAck('${doc.id}', '${rcv}')">${(data[rcv] && data[rcv].ack) || '확인!'}</button>
-                <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '제외!') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '제외'}</button>
+                <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '제외!') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '포함'}</button>
               </td>
             `).join('')}
           `;
@@ -208,7 +208,7 @@
       };
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
       receivers.forEach(rcv => {
-        rowData[rcv] = {ack: '확인!', exclude: '제외'};
+        rowData[rcv] = {ack: '확인!', exclude: '포함'};
       });
       tableRef.add(rowData).then(() => {
         loadTable();
@@ -310,8 +310,8 @@
     }
 
     .exclude-btn {
-      background-color: #e0e0e0;
-      color: black;
+      background-color: #2196F3;
+      color: white;
     }
 
     .logout {
@@ -510,7 +510,7 @@ body {
         <tr>
           <th>✔</th>
           <th rowspan="2">날짜</th>
-          <th rowspan="2">방송시간</th>
+          <th rowspan="2">올린시간</th>
           <th rowspan="2">내용</th>
           <th rowspan="2">송출사</th>
           <th colspan="6">수신사</th>
