@@ -250,7 +250,7 @@
     // 1분마다 자동으로 페이지 리프레시
     setInterval(function () {
       window.location.reload(); // 페이지 리프레시
-    }, 10000); // 60000ms = 1분
+    }, 60000); // 60000ms = 1분
   </script>
   <style>
     body {
@@ -401,21 +401,6 @@
     <div class="error-message" id="error-message"></div> <!-- 오류 메시지 표시 -->
   </div>
 
-  <style>
-    /* 로그인 페이지 배경 */
-    body {
-      font-family: Arial, sans-serif;
-      padding: 0;
-      margin: 0;
-      height: 100vh;
-      background-image: url('{{ url_for('static', filename='logo.png') }}');
-      /* 업로드한 이미지 경로 */
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
 
 
     /* 로그인 박스 디자인 */
