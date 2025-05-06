@@ -132,10 +132,7 @@ function onContentChange(id, text) {
       const currentUser = localStorage.getItem("username"); // 로그인된 사용자
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
-    tableRef
-        .orderBy('createdAt', 'asc')
-        .get()
-        .then(snapshot => {
+       tableRef.get().then(snapshot => {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
@@ -240,7 +237,6 @@ function onContentChange(id, text) {
     function addRow() {
       const rowData = {
         date: '', time: '', content: '', sender: ''
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
       receivers.forEach(rcv => {
