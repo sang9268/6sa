@@ -99,43 +99,6 @@ function onContentChange(id, text) {
 }
 
 
-    /**
- * 모든 문서의 history 서브콜렉션을 타임스탬프 내림차순으로 조회하여
- * alert 등으로 출력
- */
-function showAllHistory() {
-  // collectionGroup 으로 모든 'history' 서브콜렉션을 한 번에 가져온다
-  db.collectionGroup('history')
-    .orderBy('timestamp', 'desc')
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) {
-        alert('전체 변경 이력이 없습니다.');
-        return;
-      }
-      // 출력 메시지 누적
-      let msg = '';
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const time = d.timestamp?.toDate().toLocaleString() || '';
-        msg += `[${time}] ${d.user || '-'}님이 ${d.field}을 ` +
-               `"${d.oldValue}" → "${d.newValue}" 으로 변경\n`;
-      });
-      // 길면 console.log로 내려받기
-      if (msg.length > 1000) {
-        console.log(msg);
-        alert('전체 이력이 너무 깁니다. 개발자 콘솔을 확인하세요.');
-      } else {
-        alert(msg);
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert('이력을 불러오는 중 오류가 발생했습니다.');
-    });
-}
-
-
     
     // 알람 상태 리스너
     function listenToAlarmStatus() {
@@ -383,6 +346,15 @@ function showAllHistory() {
       color: white;
     }
 
+    /* 모든 테이블 버튼 크기 축소 */
+#logTable td button {
+  padding: 2px 6px;      /* 위아래 2px, 좌우 6px */
+  font-size: 0.75rem;    /* 폰트 크기 75% */
+  line-height: 1.2;      /* 줄 높이 조정 */
+  min-width: 0;          /* 최소 너비 제한 해제 */
+}
+
+
     .logout {
       background-color: #9C27B0;
     }
@@ -567,7 +539,6 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button onclick="showAllHistory()">📜 전체 이력 보기</button>
     </div>
 
     <audio id="alarmSound" loop>
