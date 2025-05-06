@@ -214,10 +214,10 @@ function onContentChange(id, text) {
         const data = doc.data();
 
         // 현재 상태 가져오기
-        const current = (data[rcv] && data[rcv].exclude) || '제외';
+        const current = (data[rcv] && data[rcv].exclude) || '포함';
 
         // 새로운 제외 상태
-        const updated = current === '제외' ? '제외!' : '제외';
+        const updated = current === '포함' ? '제외!' : '포함';
 
         // 제외 상태를 Firestore에 업데이트 (현재 계정에 대해서만)
         cellRef.update({
