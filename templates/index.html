@@ -170,6 +170,9 @@ function onContentChange(id, text) {
                 <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '제외!') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '포함'}</button>
               </td>
             `).join('')}
+            <td>
+            <button onclick="showHistory('${doc.id}')">이력</button>
+            </td>
           `;
           tbody.appendChild(tr);
           // ⭐ 날짜별 건수 세기
@@ -187,9 +190,40 @@ function onContentChange(id, text) {
     }
 
     // 셀 업데이트 함수
-    function updateCell(id, field, value) {
-      tableRef.doc(id).update({[field]: value}).then(() => loadTable());
+function updateCell(id, field, value) {
+  const docRef = tableRef.doc(id);
+  docRef.get().then(doc => {
+    const oldValue = doc.data()[field];
+     return docRef.update({[field]: value}).then(() => {
+      return docRef.collection('history').add({
+        field,
+        oldValue,
+        newValue: value,
+        user: localStorage.getItem('username'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  }).then(() => loadTable());
+}
+
+    /** 각 행의 history 서브컬렉션에서 변경 이력 불러오기 */
+function showHistory(id) {
+  const histRef = tableRef.doc(id).collection('history');
+  histRef.orderBy('timestamp','desc').get().then(snapshot => {
+    if (snapshot.empty) {
+      alert('변경 이력이 없습니다.');
+      return;
     }
+    let msg = '';
+    snapshot.forEach(histDoc => {
+      const d = histDoc.data();
+      const time = d.timestamp?.toDate().toLocaleString() || '';
+      msg += `${time} | ${d.user} | ${d.field}: "${d.oldValue}" → "${d.newValue}"\n`;
+    });
+    alert(msg);
+  });
+}
+
 
     // 확인 상태 토글
     function toggleAck(id, rcv) {
@@ -546,6 +580,7 @@ body {
           <th rowspan="2">내용</th>
           <th rowspan="2">송출사</th>
           <th colspan="6">수신사</th>
+          <th rowspan="2">이력</th>
         </tr>
         <tr>
           <th></th>
@@ -555,6 +590,7 @@ body {
           <th>MBN</th>
           <th>YTN</th>
           <th>OBS</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
