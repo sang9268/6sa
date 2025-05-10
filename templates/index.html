@@ -69,12 +69,19 @@ function deleteAllRows() {
   tableRef.get().then(snapshot => {
     const deletePromises = [];
     snapshot.forEach(doc => {
+      const data = doc.data();
+
+      // ✅ 고정행은 삭제하지 않음
+      if (data.content === "🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+        return; // 삭제 제외
+      }
+
       deletePromises.push(doc.ref.delete());
     });
 
     return Promise.all(deletePromises);
   }).then(() => {
-    alert("모든 행이 완전히 삭제되었습니다.");
+    alert("모든 행이 완전히 삭제되었습니다 (고정 행 제외).");
     loadTable();
   }).catch(error => {
     console.error("삭제 오류:", error);
