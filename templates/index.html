@@ -43,22 +43,25 @@ function deleteAllhides() {
     .then(snapshot => {
       const docs = snapshot.docs;
 
-      if (docs.length <= 1) {
-        alert("삭제할 데이터가 없습니다 (첫 번째 행은 보호됩니다).");
-        return;
-      }
-
       const hidePromises = [];
-      for (let i = 1; i < docs.length; i++) {
+      for (let i = 0; i < docs.length; i++) {
+        const data = docs[i].data();
+        
+        // 고정 행 내용과 같은 경우 제외
+        if (data.content === "🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+          continue; // 고정 행은 숨기지 않음
+        }
+
         hidePromises.push(docs[i].ref.update({ hidden: true }));
       }
 
       Promise.all(hidePromises).then(() => {
         loadTable();
-        alert("모든 행을 숨겼습니다 (신규 행만 표시됩니다).");
+        alert("모든 행을 숨겼습니다 (고정 행은 유지됩니다).");
       });
     });
 }
+
 
 function deleteAllRows() {
   if (!confirm("정말 모든 행을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
@@ -224,19 +227,6 @@ function onContentChange(id, text) {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
-		  // 고정된 첫 행 추가
-		const fixedRow = document.createElement("tr");
-		fixedRow.innerHTML = `
-		  <td>고정</td>
-		  <td></td>
-		  <td>2025-xx-xx</td>
-		  <td>00:00:00</td>
-		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td>ITC</td>
-		  <td colspan="6">모든 수신사에 송출됩니다.</td>
-		`;
-    tbody.appendChild(fixedRow);
-
     const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
     docs.forEach((doc, index) => {
       const data = doc.data();
@@ -293,6 +283,18 @@ function onContentChange(id, text) {
 
         index++;  // ✅ 카운터 증가
         });
+		  		  // 고정된 첫 행 추가
+		const fixedRow = document.createElement("tr");
+		fixedRow.innerHTML = `
+		  <td>고정</td>
+		  <td></td>
+		  <td>2025-xx-xx</td>
+		  <td>00:00:00</td>
+		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
+		  <td>ITC</td>
+		  <td colspan="6">모든 수신사에 송출됩니다.</td>
+		`;
+    		tbody.appendChild(fixedRow);
       });
 	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
     }
