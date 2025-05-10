@@ -36,6 +36,34 @@
       }
     }
 
+    function deleteAllRows() {
+  tableRef
+    .orderBy('createdAt', 'desc')  // 최신순 → 첫 번째가 최신 데이터
+    .get()
+    .then(snapshot => {
+      const docs = snapshot.docs;
+
+      // 문서가 1개 이하 → 아무 것도 삭제 안 함
+      if (docs.length <= 1) {
+        alert("삭제할 데이터가 없습니다 (첫 번째 행은 보호됩니다).");
+        return;
+      }
+
+      // 첫 번째 문서 제외하고 나머지 삭제
+      const deletePromises = [];
+
+      for (let i = 1; i < docs.length; i++) {
+        deletePromises.push(docs[i].ref.delete());
+      }
+
+      Promise.all(deletePromises).then(() => {
+        loadTable();  // 테이블 새로고침
+        alert("첫 번째 행을 제외한 나머지 모두 삭제되었습니다.");
+      });
+    });
+}
+
+
     // 로그인 함수
     function login() {
       const username = document.getElementById("username").value;
@@ -133,13 +161,13 @@ function onContentChange(id, text) {
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
 	tableRef
-    	.orderBy('createdAt','asc')   // 생성된 순서(오래된 것부터)로 정렬
+    	.orderBy('createdAt','desc')   // 생성된 순서(오래된 것부터)로 정렬
   	  .get()
   	  .then(snapshot => {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc, index) => {
           const data = doc.data();
           const rowId = doc.id;  // 행 ID
 
@@ -162,6 +190,7 @@ function onContentChange(id, text) {
           }
 
           tr.innerHTML = `
+	    <td>${index + 1}</td>  <!-- ✅ index 기반 번호 -->
             <td><input type="checkbox" /></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
@@ -353,9 +382,9 @@ function onContentChange(id, text) {
 
     /* 모든 테이블 버튼 크기 축소 */
 #logTable td button {
-  padding: 2px 6px;      /* 위아래 2px, 좌우 6px */
-  font-size: 0.75rem;    /* 폰트 크기 75% */
-  line-height: 1.2;      /* 줄 높이 조정 */
+  padding: 6px 12px;
+  font-size: 1rem;
+  line-height: 1.4;
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
@@ -509,6 +538,12 @@ body {
       color: white;
     }
 
+    .deleteAll {
+  	background-color: #e91e63; /* 진한 핑크 */
+	  color: white;
+     }
+
+
     /* 로그인 버튼 디자인 */
     .login-container button {
       width: 100%;
@@ -550,6 +585,7 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
+      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 삭제 (첫 번째 제외)</button>
     </div>
 
     <audio id="alarmSound" loop>
@@ -560,7 +596,8 @@ body {
     <table id="logTable">
       <thead>
         <tr>
-          <th>✔</th>
+	  <th rowspan="2">번호</th>
+          <th rowspan="2">✔</th>
           <th rowspan="2">날짜</th>
           <th rowspan="2">올린시간</th>
           <th rowspan="2">내용</th>
@@ -568,7 +605,6 @@ body {
           <th colspan="6">수신사</th>
         </tr>
         <tr>
-          <th></th>
           <th>KBS</th>
           <th>MBC</th>
           <th>SBS</th>
