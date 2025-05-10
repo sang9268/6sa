@@ -224,6 +224,19 @@ function onContentChange(id, text) {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
+		  // 고정된 첫 행 추가
+		const fixedRow = document.createElement("tr");
+		fixedRow.innerHTML = `
+		  <td>고정</td>
+		  <td></td>
+		  <td>2025-xx-xx</td>
+		  <td>00:00:00</td>
+		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
+		  <td>ITC</td>
+		  <td colspan="6">모든 수신사에 송출됩니다.</td>
+		`;
+    tbody.appendChild(fixedRow);
+
     const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
     docs.forEach((doc, index) => {
       const data = doc.data();
