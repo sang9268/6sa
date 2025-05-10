@@ -36,7 +36,7 @@
       }
     }
 
-function deleteAllRows() {
+function deleteAllhides() {
   tableRef
     .orderBy("createdAt", "desc")
     .get()
@@ -59,6 +59,26 @@ function deleteAllRows() {
       });
     });
 }
+
+function deleteAllRows() {
+  if (!confirm("정말 모든 행을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+
+  tableRef.get().then(snapshot => {
+    const deletePromises = [];
+    snapshot.forEach(doc => {
+      deletePromises.push(doc.ref.delete());
+    });
+
+    return Promise.all(deletePromises);
+  }).then(() => {
+    alert("모든 행이 완전히 삭제되었습니다.");
+    loadTable();
+  }).catch(error => {
+    console.error("삭제 오류:", error);
+    alert("삭제 중 오류가 발생했습니다.");
+  });
+}
+
 
 
   // 건수 보기 함수
@@ -95,6 +115,8 @@ function openAllRows() {
           tbody.appendChild(tr);
         });
       });
+	document.getElementById("viewStatus").innerText = "📋 현재 보기: 전체 행 보기";
+
   }
 
     // 로그인 함수
@@ -259,6 +281,7 @@ function onContentChange(id, text) {
         index++;  // ✅ 카운터 증가
         });
       });
+	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
     }
 
     // 셀 업데이트 함수
@@ -594,7 +617,30 @@ body {
 	  font-weight: bold;   /* 굵기까지 맞추기 */
 	  line-height: 1.4;
 	}
-     
+
+.footer-button-container {
+  text-align: center;
+  margin-top: 30px;
+  padding: 20px 0;
+  border-top: 2px solid #ccc;
+}
+
+.footer-button-container button {
+  padding: 12px 24px;
+  margin: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #607d8b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.footer-button-container button:hover {
+  background-color: #455a64;
+}
+
 
     /* 로그인 버튼 디자인 */
     .login-container button {
@@ -637,12 +683,12 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 숨김</button>
-      <button class="viewAllAll" onclick="openAllRows()">📋 전체 행 보기</button>
-      <button class="viewAll" onclick="openAllView()">👀 이력 보기</button>
-      <button class="viewFiltered" onclick="loadTable()">🔍 기본 보기</button>
+      <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
     </div>
 
+<p id="viewStatus" style="text-align:center; font-weight:bold; margin-top: 10px;">📄 현재 보기: 기본 보기</p>
+
+	  
     <audio id="alarmSound" loop>
       <source src="{{ url_for('static', filename='alarm.mp3') }}" type="audio/mpeg">
       브라우저가 오디오를 지원하지 않습니다.
@@ -670,6 +716,13 @@ body {
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
+    <div class="footer-button-container">
+    <button onclick="loadTable()">📄 기본 보기</button>
+    <button onclick="openAllRows()">📋 전체 행 보기</button>
+    <button onclick="openAllView()">📊 이력 보기</button>
+    <button onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button>
+    </div>
+
   </div>
 
   <style>
