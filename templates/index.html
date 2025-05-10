@@ -259,7 +259,7 @@ function onContentChange(id, text) {
 
           tr.innerHTML = `
   	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
-            <td><input type="checkbox" /></td>
+	    <td><input type="checkbox" data-id="${rowId}" /></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
             <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
@@ -378,7 +378,6 @@ function onContentChange(id, text) {
     // 행 숨기기 함수
 function deleteRow() {
   const checkedBoxes = document.querySelectorAll("#logTable tbody input[type='checkbox']:checked");
-
   const deletePromises = [];
 
   checkedBoxes.forEach(box => {
@@ -386,8 +385,8 @@ function deleteRow() {
     const row = box.closest("tr");
     const isFixedRow = row && row.innerText.includes("🛠 이곳에 내용을 입력하시면");
 
-    if (!isFixedRow) {
-      deletePromises.push(tableRef.doc(id).update({ hidden: true }));
+    if (!isFixedRow && id) {
+      deletePromises.push(tableRef.doc(id).delete());
     }
   });
 
@@ -395,7 +394,6 @@ function deleteRow() {
     loadTable();
   });
 }
-
 
 
     // 페이지 로딩 시 로그인 상태 확인
