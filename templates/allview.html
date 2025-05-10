@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>전체 보기</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #fff8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>👀 전체 데이터 보기 (숨김 포함)</h1>
+  <table id="allTable">
+    <thead>
+      <tr>
+        <th>번호</th>
+        <th>날짜</th>
+        <th>시간</th>
+        <th>내용</th>
+        <th>송출사</th>
+        <th>숨김 여부</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "sabodo-82fa8.firebaseapp.com",
+      projectId: "sabodo-82fa8",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const tableRef = db.collection("logTable");
+
+    tableRef.orderBy("createdAt", "desc").get().then(snapshot => {
+      const tbody = document.querySelector("#allTable tbody");
+      let index = 1;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index++}</td>
+          <td>${data.date || ''}</td>
+          <td>${data.time || ''}</td>
+          <td>${data.content || ''}</td>
+          <td>${data.sender || ''}</td>
+          <td>${data.hidden ? '숨김' : '표시'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+  </script>
+</body>
+</html>
