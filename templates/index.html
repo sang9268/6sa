@@ -36,32 +36,30 @@
       }
     }
 
-    function deleteAllRows() {
+function deleteAllRows() {
   tableRef
-    .orderBy('createdAt', 'desc')  // 최신순 → 첫 번째가 최신 데이터
+    .orderBy("createdAt", "desc")
     .get()
     .then(snapshot => {
       const docs = snapshot.docs;
 
-      // 문서가 1개 이하 → 아무 것도 삭제 안 함
       if (docs.length <= 1) {
         alert("삭제할 데이터가 없습니다 (첫 번째 행은 보호됩니다).");
         return;
       }
 
-      // 첫 번째 문서 제외하고 나머지 삭제
-      const deletePromises = [];
-
+      const hidePromises = [];
       for (let i = 1; i < docs.length; i++) {
-        deletePromises.push(docs[i].ref.delete());
+        hidePromises.push(docs[i].ref.update({ hidden: true }));
       }
 
-      Promise.all(deletePromises).then(() => {
-        loadTable();  // 테이블 새로고침
-        alert("첫 번째 행을 제외한 나머지 모두 삭제되었습니다.");
+      Promise.all(hidePromises).then(() => {
+        loadTable();
+        alert("모든 행을 숨겼습니다 (신규 행만 표시됩니다).");
       });
     });
 }
+
 
   // 전체보기 함
   function openAllView() {
@@ -165,18 +163,17 @@ function onContentChange(id, text) {
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
 	tableRef
-	.where("hidden", "==", false)  // ✅ 숨김된 문서는 제외
     	.orderBy('createdAt','desc')   // 생성된 순서(오래된 것부터)로 정렬
   	  .get()
   	  .then(snapshot => {
+	const docs = snapshot.docs.filter(doc => !doc.data().hidden); // hidden이 true인 문서 제외
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
-	const total = snapshot.size;
-	let index = 0;
-	snapshot.forEach((doc) => {
-          const data = doc.data();
-          const rowId = doc.id;  // 행 ID
+    const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
+    docs.forEach((doc, index) => {
+      const data = doc.data();
+      const rowId = doc.id;
 
           const tr = document.createElement("tr");
           tr.setAttribute("data-row-id", rowId);  // 행 ID를 data-row-id로 설정
