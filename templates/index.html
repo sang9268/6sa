@@ -134,7 +134,7 @@ function openAllRows() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
       const validUsers = {
-        "itc": "itc",
+        "lgu+": "lgu+",
         "kbs": "kbs",
         "mbc": "mbc",
         "sbs": "sbs",
@@ -265,7 +265,7 @@ function onContentChange(id, text) {
             <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
 		<td>
   		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
-   		 ${["선택","ITC", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
+   		 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
    		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
   		  `).join('')}
  		 </select>
@@ -298,7 +298,7 @@ function onContentChange(id, text) {
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
 		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td>ITC</td>
+		  <td>LGU+</td>
 		  <td colspan="6" style="color:red;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
