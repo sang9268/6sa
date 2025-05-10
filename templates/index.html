@@ -61,9 +61,40 @@ function deleteAllRows() {
 }
 
 
-  // 전체보기 함
+  // 건수 보기 함수
   function openAllView() {
     window.open("allview.html", "_blank", "width=1200,height=800");
+  }
+
+// 전체 보기 함수
+function openAllRows() {
+    // hidden 여부에 관계없이 전체 로우 보여주기
+    tableRef
+      .orderBy('createdAt', 'desc')
+      .get()
+      .then(snapshot => {
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = "";
+        const docs = snapshot.docs;
+        const total = docs.length;
+
+        docs.forEach((doc, index) => {
+          const data = doc.data();
+          const rowId = doc.id;
+          const tr = document.createElement("tr");
+          tr.setAttribute("data-row-id", rowId);
+          tr.innerHTML = `
+            <td>${total - index}</td>
+            <td><input type="checkbox" /></td>
+            <td>${data.date || ''}</td>
+            <td>${data.time || ''}</td>
+            <td>${data.content || ''}</td>
+            <td>${data.sender || ''}</td>
+            <td colspan="6">숨김 여부: ${data.hidden ? '✅ 숨김' : '❌ 표시중'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
   }
 
     // 로그인 함수
@@ -159,6 +190,7 @@ function onContentChange(id, text) {
 
     // 데이터 로드 함수
     function loadTable() {
+      const dateCounts = {}; // 이 줄을 loadTable() 함수 맨 위에 추가
       const currentUser = localStorage.getItem("username"); // 로그인된 사용자
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
@@ -605,8 +637,10 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 삭제</button>
+      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 숨김</button>
+      <button class="viewAllAll" onclick="openAllRows()">📋 전체 행 보기</button>
       <button class="viewAll" onclick="openAllView()">👀 이력 보기</button>
+      <button class="viewFiltered" onclick="loadTable()">🔍 기본 보기</button>
     </div>
 
     <audio id="alarmSound" loop>
