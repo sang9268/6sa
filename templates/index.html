@@ -258,7 +258,7 @@ function onContentChange(id, text) {
             <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
 		<td>
   		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
-   		 ${["ITC", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
+   		 ${["선택","ITC", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
    		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
   		  `).join('')}
  		 </select>
@@ -292,7 +292,7 @@ function onContentChange(id, text) {
 		  <td>00:00:00</td>
 		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
 		  <td>ITC</td>
-		  <td colspan="6">모든 수신사에 송출됩니다.</td>
+		  <td colspan="6">수신사에서는 내용 확인 시 확인버튼을 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
       });
@@ -471,9 +471,9 @@ function deleteRow() {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
-    /* ‘내용’ 입력 칼럼(테이블 4번째 칼럼) 글자 크게 */
-#logTable td:nth-child(4),
-#logTable th:nth-child(4) {
+    /* ‘내용’ 입력 칼럼(테이블 5번째 칼럼) 글자 크게 */
+#logTable td:nth-child(5),
+#logTable th:nth-child(5) {
   font-size: 1.2rem;    /* 원하시는 크기로 조정하세요 */
   line-height: 1.4;     /* 필요시 줄간격도 조절 */
 }
