@@ -167,7 +167,8 @@ function onContentChange(id, text) {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
-        snapshot.forEach((doc, index) => {
+	let index = 0;
+	snapshot.forEach((doc) => {
           const data = doc.data();
           const rowId = doc.id;  // 행 ID
 
@@ -179,7 +180,7 @@ function onContentChange(id, text) {
 
           receivers.forEach((name, idx) => {
             // 로그인된 계정이 해당 수신사일 경우, 대소문자 구분 없이 비교
-            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "제외!") {
+            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "미수신") {
               shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
             }
           });
@@ -195,11 +196,18 @@ function onContentChange(id, text) {
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
             <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'sender', this.innerText)">${data.sender || ''}</td>
+		<td>
+  		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
+   		 ${["ITC", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
+   		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
+  		  `).join('')}
+ 		 </select>
+		</td>
+
             ${receivers.map(rcv => `
               <td>
                 <button onclick="toggleAck('${doc.id}', '${rcv}')">${(data[rcv] && data[rcv].ack) || '확인!'}</button>
-                <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '제외!') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '포함'}</button>
+                <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '수신'}</button>
               </td>
             `).join('')}
           `;
@@ -213,7 +221,7 @@ function onContentChange(id, text) {
             }
           }
 
-        
+        index++;  // ✅ 카운터 증가
         });
       });
     }
@@ -246,10 +254,10 @@ function onContentChange(id, text) {
         const data = doc.data();
 
         // 현재 상태 가져오기
-        const current = (data[rcv] && data[rcv].exclude) || '포함';
+        const current = (data[rcv] && data[rcv].exclude) || '수신';
 
         // 새로운 제외 상태
-        const updated = current === '포함' ? '제외!' : '포함';
+        const updated = current === '수신' ? '미수신' : '수신';
 
         // 제외 상태를 Firestore에 업데이트 (현재 계정에 대해서만)
         cellRef.update({
@@ -274,7 +282,7 @@ function onContentChange(id, text) {
 
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
       receivers.forEach(rcv => {
-        rowData[rcv] = {ack: '확인!', exclude: '포함'};
+        rowData[rcv] = {ack: '확인!', exclude: '수신'};
       });
       tableRef.add(rowData).then(() => {
         loadTable();
