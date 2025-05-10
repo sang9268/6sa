@@ -115,7 +115,7 @@ function openAllRows() {
           tr.setAttribute("data-row-id", rowId);
           tr.innerHTML = `
             <td>${total - index}</td>
-            <td><input type="checkbox" /></td>
+	    <td><input type="checkbox" data-id="${rowId}" /></td>
             <td>${data.date || ''}</td>
             <td>${data.time || ''}</td>
             <td>${data.content || ''}</td>
@@ -299,7 +299,7 @@ function onContentChange(id, text) {
 		  <td>00:00:00</td>
 		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
 		  <td>LGU+</td>
-		  <td colspan="6" style="color:red;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요.</td>
+		  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
       });
@@ -375,19 +375,27 @@ function onContentChange(id, text) {
     }
 
 
-    // 행 숨기 함수
+    // 행 숨기기 함수
 function deleteRow() {
-  tableRef.get().then(snapshot => {
-    const rows = document.querySelectorAll("#logTable tbody tr");
-    snapshot.docs.forEach((doc, index) => {
-      if (rows[index].querySelector("input").checked) {
-        doc.ref.update({ hidden: true }).then(() => {
-          loadTable();
-        });
-      }
-    });
+  const checkedBoxes = document.querySelectorAll("#logTable tbody input[type='checkbox']:checked");
+
+  const deletePromises = [];
+
+  checkedBoxes.forEach(box => {
+    const id = box.getAttribute("data-id");
+    const row = box.closest("tr");
+    const isFixedRow = row && row.innerText.includes("🛠 이곳에 내용을 입력하시면");
+
+    if (!isFixedRow) {
+      deletePromises.push(tableRef.doc(id).update({ hidden: true }));
+    }
+  });
+
+  Promise.all(deletePromises).then(() => {
+    loadTable();
   });
 }
+
 
 
     // 페이지 로딩 시 로그인 상태 확인
@@ -406,7 +414,7 @@ function deleteRow() {
     // 1분마다 자동으로 페이지 리프레시
     setInterval(function () {
       window.location.reload(); // 페이지 리프레시
-    }, 60000); // 60000ms = 1분
+    }, 300000); // 60000ms = 1분
   </script>
   <style>
     body {
