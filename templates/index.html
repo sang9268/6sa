@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>📡 6사보도망 서비스 내역</title>
+  <title>📡 6사보도 서비스 내역</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -27,7 +27,7 @@
       if (currentUser) {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("service-container").style.display = "block";
-        document.getElementById("currentUser").innerText = `${currentUser} 님, 환영합니다!`;  // 로그인한 계정 표시
+        document.getElementById("currentUser").innerText = `${currentUser} 님, 환영합니다! 이 페이지는 엘지유플러스에서 관리중입니다. 문의 : 02-2089-0610`;  // 로그인한 계정 표시
         loadTable();
         listenToAlarmStatus(); // 알람 상태 리스너 시작
       } else {
@@ -695,7 +695,7 @@ body {
   
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
-    <h1>📡 6사보도망 실시간 서비스</h1>
+    <h1>📡 6사보도 실시간 서비스</h1>
     <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> <!-- 로그인한 사용자 표시 -->
     <div class="button-container">
       <button class="send" onclick="sendAlarm()">🔔 가청(요청)</button>
