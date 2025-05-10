@@ -63,6 +63,10 @@
     });
 }
 
+  // 전체보기 함
+  function openAllView() {
+    window.open("allview.html", "_blank", "width=1200,height=800");
+  }
 
     // 로그인 함수
     function login() {
@@ -161,12 +165,14 @@ function onContentChange(id, text) {
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
 	tableRef
+	.where("hidden", "==", false)  // ✅ 숨김된 문서는 제외
     	.orderBy('createdAt','desc')   // 생성된 순서(오래된 것부터)로 정렬
   	  .get()
   	  .then(snapshot => {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
+	const total = snapshot.size;
 	let index = 0;
 	snapshot.forEach((doc) => {
           const data = doc.data();
@@ -191,7 +197,7 @@ function onContentChange(id, text) {
           }
 
           tr.innerHTML = `
-	    <td>${index + 1}</td>  <!-- ✅ index 기반 번호 -->
+  	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
             <td><input type="checkbox" /></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
@@ -277,7 +283,8 @@ function onContentChange(id, text) {
     function addRow() {
       const rowData = {
         date: '', time: '', content: '', sender: '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+	hidden: false,  // ✅ 숨김 여부
       };
 
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
@@ -294,19 +301,20 @@ function onContentChange(id, text) {
     }
 
 
-    // 행 삭제 함수
-    function deleteRow() {
-      tableRef.get().then(snapshot => {
-        const rows = document.querySelectorAll("#logTable tbody tr");
-        snapshot.docs.forEach((doc, index) => {
-          if (rows[index].querySelector("input").checked) {
-            doc.ref.delete().then(() => {
-              loadTable();
-            });
-          }
+    // 행 숨기 함수
+function deleteRow() {
+  tableRef.get().then(snapshot => {
+    const rows = document.querySelectorAll("#logTable tbody tr");
+    snapshot.docs.forEach((doc, index) => {
+      if (rows[index].querySelector("input").checked) {
+        doc.ref.update({ hidden: true }).then(() => {
+          loadTable();
         });
-      });
-    }
+      }
+    });
+  });
+}
+
 
     // 페이지 로딩 시 로그인 상태 확인
     document.addEventListener("DOMContentLoaded", checkLogin);
@@ -550,7 +558,14 @@ body {
   	background-color: #e91e63; /* 진한 핑크 */
 	  color: white;
      }
-
+	  
+	#logTable select {
+	  font-size: 16px;  /* 버튼과 동일하게 설정 */
+  	  padding: 6px 12px;  /* 버튼과 여백도 맞춰주면 보기 좋음 */
+	  font-weight: bold;   /* 굵기까지 맞추기 */
+	  line-height: 1.4;
+	}
+     
 
     /* 로그인 버튼 디자인 */
     .login-container button {
@@ -593,7 +608,8 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 삭제 (첫 번째 제외)</button>
+      <button class="deleteAll" onclick="deleteAllRows()">🗑 전체 행 삭제</button>
+      <button class="viewAll" onclick="openAllView()">👀 이력 보기</button>
     </div>
 
     <audio id="alarmSound" loop>
