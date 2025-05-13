@@ -273,8 +273,13 @@ function onContentChange(id, text) {
 
             ${receivers.map(rcv => `
               <td>
-                <button onclick="toggleAck('${doc.id}', '${rcv}')">${(data[rcv] && data[rcv].ack) || '확인!'}</button>
-                <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">${(data[rcv] && data[rcv].exclude) || '수신'}</button>
+  <button class="logo-${rcv.toLowerCase()}" onclick="toggleAck('${doc.id}', '${rcv}')">
+    ${(data[rcv] && data[rcv].ack) || '확인!'}
+  </button>
+  <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" 
+          class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">
+    ${(data[rcv] && data[rcv].exclude) || '수신'}
+  </button>
               </td>
             `).join('')}
           `;
@@ -741,9 +746,9 @@ body {
           <th colspan="6">수신사</th>
         </tr>
         <tr>
-          <th>KBS</th>
-          <th>MBC</th>
           <th>SBS</th>
+          <th>MBC</th>
+          <th>KBS</th>
           <th>MBN</th>
           <th>YTN</th>
           <th>OBS</th>
@@ -796,6 +801,48 @@ body {
       border: 1px solid #ccc;
     }
   </style>
+<style>
+  /* 기존 스타일들 */
+  td[contenteditable] {
+    background-color: #fffbe6;
+    border: 1px solid #ccc;
+  }
+</style>
+
+<!-- ✅ 새롭게 닫힌 후 여기에 스타일 추가 -->
+<style>
+.logo-kbs {
+  font-weight: bold;
+  color: #00338D;
+  font-size: 1.1rem;
+  font-family: "Arial Black", sans-serif;
+  letter-spacing: 1px;
+}
+.logo-mbc {
+  font-weight: bold;
+  color: #1c1c1c;
+  font-size: 1.1rem;
+  font-family: "Verdana", sans-serif;
+}
+.logo-sbs {
+  font-weight: bold;
+  color: #0a84ae;
+  font-size: 1.1rem;
+  font-family: "Tahoma", sans-serif;
+}
+.logo-mbn {
+  font-weight: bold;
+  color: #f37021;
+}
+.logo-ytn {
+  font-weight: bold;
+  color: #0066cc;
+}
+.logo-obs {
+  font-weight: bold;
+  color: #4caf50;
+}
+</style>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
