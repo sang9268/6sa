@@ -746,12 +746,12 @@ body {
           <th colspan="6">수신사</th>
         </tr>
 <tr>
-  <th><img src="/static/sbs.png" alt="SBS" style="height:24px;"></th>
-  <th><img src="/static/mbc.png" alt="MBC" style="height:24px;"></th>
-  <th><img src="/static/kbs.png" alt="KBS" style="height:24px;"></th>
-  <th><img src="/static/mbn.png" alt="MBN" style="height:24px;"></th>
-  <th><img src="/static/ytn.png" alt="YTN" style="height:24px;"></th>
-  <th><img src="/static/obs.png" alt="OBS" style="height:24px;"></th>
+<th><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
+<th><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
+<th><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
+<th><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
+<th><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
+<th><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
 </tr>
 
       </thead>
@@ -844,6 +844,17 @@ body {
   color: #4caf50;
 }
 </style>
+	
+<style>
+  .logo-img {
+    width: 60px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+  }
+</style>
+
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
