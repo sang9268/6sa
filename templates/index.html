@@ -129,6 +129,12 @@ function openAllRows() {
 
   }
 
+	function downloadExcel() {
+	  const table = document.getElementById("logTable");
+	  const wb = XLSX.utils.table_to_book(table, { sheet: "6사보도망" });
+	  XLSX.writeFile(wb, "6사보도망_서비스내역.xlsx");
+	}
+
     // 로그인 함수
     function login() {
       const username = document.getElementById("username").value;
@@ -726,6 +732,7 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
+      <button class="save" onclick="downloadExcel()">📥 엑셀로 저장</button>
       <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
     </div>
 
@@ -749,12 +756,12 @@ body {
           <th colspan="6">수신사</th>
         </tr>
 <tr>
-<th><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
-<th><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
-<th><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
-<th><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
-<th><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
-<th><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
+<th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
+<th colspan="2"><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
+<th colspan="2"><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
+<th colspan="2"><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
+<th colspan="2"><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
+<th colspan="2"><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
 </tr>
 
       </thead>
@@ -857,7 +864,7 @@ body {
     margin: auto;
   }
 </style>
-
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.full.min.js"></script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
