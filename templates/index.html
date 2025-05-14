@@ -753,7 +753,7 @@ body {
           <th rowspan="2">올린시간</th>
           <th rowspan="2">내용</th>
           <th rowspan="2">송출사</th>
-          <th colspan="6">수신사</th>
+          <th colspan="12">수신사</th>
         </tr>
 <tr>
 <th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
@@ -812,13 +812,6 @@ body {
       border: 1px solid #ccc;
     }
   </style>
-<style>
-  /* 기존 스타일들 */
-  td[contenteditable] {
-    background-color: #fffbe6;
-    border: 1px solid #ccc;
-  }
-</style>
 
 <!-- ✅ 새롭게 닫힌 후 여기에 스타일 추가 -->
 <style>
@@ -856,13 +849,14 @@ body {
 </style>
 	
 <style>
-  .logo-img {
-    width: 60px;
-    height: 24px;
-    object-fit: contain;
-    display: block;
-    margin: auto;
-  }
+.logo-img {
+  width: 60px;
+  height: 24px;
+  object-fit: cover; /* 또는 'fill' */
+  display: block;
+  margin: auto;
+  background-color: #f0f0f0; /* 이미지 깨졌을 때 배경 처리 */
+}
 </style>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.full.min.js"></script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
