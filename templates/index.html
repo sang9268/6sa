@@ -607,22 +607,22 @@ function deleteRow() {
 
   <style>
 
-/* 페이지 전반 배경을 옅은 분홍색으로 설정 */
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background-color: #ffe6f0;
-}
-
-/* 작성 페이지 폭을 화면 전체로 유지 */
-.login-container,
-#service-container {
-  width: calc(100% - 40px); /* body padding 20px씩 제외 */
-  margin: 0 auto;
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-}
+	/* 페이지 전반 배경을 옅은 분홍색으로 설정 */
+	body {
+	  font-family: Arial, sans-serif;
+	  padding: 20px;
+	  background-color: #ffe6f0;
+	}
+	
+	/* 작성 페이지 폭을 화면 전체로 유지 */
+	.login-container,
+	#service-container {
+	  width: calc(100% - 40px); /* body padding 20px씩 제외 */
+	  margin: 0 auto;
+	  background: #fff;
+	  padding: 20px;
+	  border-radius: 8px;
+	}
 
     
     /* 로그인 박스 디자인 */
@@ -637,6 +637,32 @@ body {
       color: white;
     }
 
+	/* 🔒 제목, 버튼 고정 */
+	.header-fixed {
+	  position: sticky;
+	  top: 0;
+	  background-color: #ffe6f0;
+	  z-index: 1000;
+	  padding-top: 10px;
+	  padding-bottom: 10px;
+	}
+	
+	/* 🔒 테이블 헤더 고정용 래퍼 */
+	.table-wrapper {
+	  max-height: 600px;  /* 필요 시 조절 가능 */
+	  overflow-y: auto;
+	}
+	
+	/* 🔒 테이블 헤더(2줄) 고정 */
+	#logTable thead tr:nth-child(1),
+	#logTable thead tr:nth-child(2) {
+	  position: sticky;
+	  top: 0;
+	  background-color: white;
+	  z-index: 10;
+	}
+
+	  
     /* 타이틀 디자인 */
     .login-container h2 {
       color: #FF9800;
@@ -734,9 +760,9 @@ body {
   
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
-    <h1>📡 6사보도 실시간 서비스</h1>
+    <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
     <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> <!-- 로그인한 사용자 표시 -->
-    <div class="button-container">
+  <div class="button-container header-fixed">
       <button class="send" onclick="sendAlarm()">🔔 가청(요청)</button>
       <button class="stop" onclick="stopAlarm()">⏹ 가청정지(확인)</button>
       <button class="add" onclick="addRow()">➕ 행 추가</button>
@@ -756,6 +782,7 @@ body {
       브라우저가 오디오를 지원하지 않습니다.
     </audio>
 
+<div class="table-wrapper">
     <table id="logTable">
       <thead>
         <tr>
@@ -779,6 +806,7 @@ body {
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
+</div>
     <div class="footer-button-container">
     <button onclick="loadTable()">📄 기본 보기</button>
     <button onclick="openAllRows()">📋 전체 행 보기</button>
