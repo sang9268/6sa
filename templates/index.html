@@ -656,6 +656,10 @@ function deleteRow() {
 	  border-radius: 8px;
 	}
 
+	.danger-button {
+	  color: red;
+	  font-weight: bold;
+	}
     
     /* 로그인 박스 디자인 */
     .login-container {
@@ -804,7 +808,6 @@ function deleteRow() {
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
       <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
-      <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
     </div>
 
 <p id="viewStatus" style="text-align:center; font-weight:bold; margin-top: 10px;">📄 현재 보기: 기본 보기</p>
@@ -845,7 +848,8 @@ function deleteRow() {
     <button onclick="loadTable()">📄 기본 보기</button>
     <button onclick="openAllRows()">📋 전체 행 보기</button>
     <button onclick="openAllView()">📊 이력 보기</button>
-    <button onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button>
+    <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
+    <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button>
     </div>
   <div class="footer-comment">
   ⚠️ 전체 행 완전 삭제 버튼은 누르지 말아주세요(관리용)
