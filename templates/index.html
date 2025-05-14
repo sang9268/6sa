@@ -441,12 +441,6 @@ function deleteRow() {
     }, 300000); // 60000ms = 1분
   </script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      position: relative;
-      background-color: #f4f4f4;
-    }
 
     h1 {
       text-align: center;
@@ -576,9 +570,9 @@ function deleteRow() {
       font-weight: bold;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
+tbody tr:nth-child(even) {
+  background-color: #fffbe6 !important;
+}
 
     td[contenteditable] {
       background-color: #fffbe6;
@@ -831,6 +825,7 @@ function deleteRow() {
 
     th,
     td {
+      background-color: #fffbe6; /* 연노랑 */
       border: 1px solid #ccc;
       padding: 12px;
       text-align: center;
@@ -841,11 +836,9 @@ function deleteRow() {
       font-weight: bold;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
-      /* 짝수 번째 행의 배경을 연한 회색으로 설정 */
-    }
-
+	tbody tr {
+	  background-color: #fffbe6;
+	}
     td[contenteditable] {
       background-color: #fffbe6;
       /* 편집 가능한 셀 배경색 */
@@ -892,7 +885,7 @@ function deleteRow() {
 .logo-img {
   width: 60px;
   height: 24px;
-  object-fit: cover; /* 또는 'fill' */
+  object-fit: contain;     /* 비율 유지하며 이미지 전체 보이기 */
   display: block;
   margin: auto;
   background-color: #f0f0f0; /* 이미지 깨졌을 때 배경 처리 */
