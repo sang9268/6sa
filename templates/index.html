@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>📡 6사보도 서비스 내역</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -159,22 +160,22 @@ function openAllRows() {
 
   }
 
-  function downloadAsText() {
-    const rows = document.querySelectorAll("#logTable tr");
-    let text = "";
+function downloadAsExcel() {
+  const table = document.getElementById("logTable");
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.table_to_sheet(table);
+  XLSX.utils.book_append_sheet(wb, ws, "6사보도망");
 
-    rows.forEach(row => {
-      const cells = row.querySelectorAll("th, td");
-      const rowText = Array.from(cells).map(cell => cell.innerText.trim()).join("\t");
-      text += rowText + "\n";
-    });
+  // ✅ 오늘 날짜 구하기 (YYYY-MM-DD 형식)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
 
-    const blob = new Blob([text], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.download = "6사보도망_서비스내역.txt";
-    link.href = URL.createObjectURL(blob);
-    link.click();
-  }
+  // ✅ 파일명에 날짜 추가
+  XLSX.writeFile(wb, `6사보도망_서비스내역_${todayStr}.xlsx`);
+}
 
 
     // 로그인 함수
@@ -613,7 +614,6 @@ function deleteRow() {
 
 
     td[contenteditable] {
-      background-color: #fffbe6;
       border: 1px solid #ccc;
     }
 
@@ -803,7 +803,7 @@ function deleteRow() {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button onclick="downloadAsText()">📝 텍스트로 저장</button>
+      <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
       <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
     </div>
 
@@ -879,8 +879,6 @@ function deleteRow() {
 	}
 
     td[contenteditable] {
-      background-color: #fffbe6;
-      /* 편집 가능한 셀 배경색 */
       border: 1px solid #ccc;
     }
   </style>
