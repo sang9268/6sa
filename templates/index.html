@@ -64,19 +64,33 @@ function deleteAllhides() {
 
 function toggleBroadcastStatus(button) {
   const tr = button.closest("tr");
+  const rowId = tr.getAttribute("data-row-id");
   const current = button.innerText;
 
+  let nextState, color;
   if (current === "송출전") {
-    button.innerText = "송출중";
-    tr.style.backgroundColor = "#ffcccc";  // 연빨강
+    nextState = "송출중";
+    color = "#ffcccc";  // 연빨강
   } else if (current === "송출중") {
-    button.innerText = "송출후";
-    tr.style.backgroundColor = "#dcdcdc";  // 회색
+    nextState = "송출후";
+    color = "#dcdcdc";  // 회색
   } else {
-    button.innerText = "송출전";
-    tr.style.backgroundColor = "#fffbe6";  // 기본 연노랑
+    nextState = "송출전";
+    color = "#fffbe6";  // 연노랑
+  }
+
+  // 버튼 텍스트 및 행 색상 변경
+  button.innerText = nextState;
+  tr.style.backgroundColor = color;
+
+  // Firestore에 상태 업데이트
+  if (rowId) {
+    tableRef.doc(rowId).update({
+      broadcastStatus: nextState
+    });
   }
 }
+
 
 	  
 function deleteAllRows() {
@@ -276,6 +290,14 @@ function onContentChange(id, text) {
           const tr = document.createElement("tr");
           tr.setAttribute("data-row-id", rowId);  // 행 ID를 data-row-id로 설정
 
+	// ✅ 상태에 따라 배경색 지정
+	const status = data.broadcastStatus || "송출전";
+	let bgColor = "#fffbe6"; // 기본 송출전
+	if (status === "송출중") bgColor = "#ffcccc";
+	else if (status === "송출후") bgColor = "#dcdcdc";
+	tr.style.backgroundColor = bgColor;
+
+
           // 수신사별로 제외 상태를 체크하여, 해당 수신사에서 제외된 행만 숨김
           let shouldDisplayRow = true;
 
@@ -294,7 +316,7 @@ function onContentChange(id, text) {
           tr.innerHTML = `
   	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
 	    <td><input type="checkbox" data-id="${rowId}" /></td>
-      	    <td><button onclick="toggleBroadcastStatus(this)">송출전</button></td>
+	    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
             <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
@@ -337,6 +359,7 @@ ${receivers.map(rcv => `
 		const fixedRow = document.createElement("tr");
 		fixedRow.innerHTML = `
 		  <td>고정</td>
+		  <td></td>
 		  <td></td>
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
@@ -402,6 +425,7 @@ ${receivers.map(rcv => `
         date: '', time: '', content: '', sender: '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
 	hidden: false,  // ✅ 숨김 여부
+  	broadcastStatus: "송출전",  // ✅ 버튼 상태 기본값
       };
 
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
