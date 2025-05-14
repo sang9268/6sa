@@ -271,17 +271,20 @@ function onContentChange(id, text) {
  		 </select>
 		</td>
 
-            ${receivers.map(rcv => `
-              <td>
-  <button class="logo-${rcv.toLowerCase()}" onclick="toggleAck('${doc.id}', '${rcv}')">
-    ${(data[rcv] && data[rcv].ack) || '확인!'}
-  </button>
-  <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" 
-          class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">
-    ${(data[rcv] && data[rcv].exclude) || '수신'}
-  </button>
-              </td>
-            `).join('')}
+${receivers.map(rcv => `
+  <td>
+    <button class="logo-${rcv.toLowerCase()}" onclick="toggleAck('${doc.id}', '${rcv}')">
+      ${(data[rcv] && data[rcv].ack) || '확인!'}
+    </button>
+  </td>
+  <td>
+    <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" 
+            class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">
+      ${(data[rcv] && data[rcv].exclude) || '수신'}
+    </button>
+  </td>
+`).join('')}
+
           `;
           tbody.appendChild(tr);
           // ⭐ 날짜별 건수 세기
