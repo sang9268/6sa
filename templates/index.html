@@ -129,11 +129,23 @@ function openAllRows() {
 
   }
 
-	function downloadExcel() {
-	  const table = document.getElementById("logTable");
-	  const wb = XLSX.utils.table_to_book(table, { sheet: "6사보도망" });
-	  XLSX.writeFile(wb, "6사보도망_서비스내역.xlsx");
-	}
+  function downloadAsText() {
+    const rows = document.querySelectorAll("#logTable tr");
+    let text = "";
+
+    rows.forEach(row => {
+      const cells = row.querySelectorAll("th, td");
+      const rowText = Array.from(cells).map(cell => cell.innerText.trim()).join("\t");
+      text += rowText + "\n";
+    });
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.download = "6사보도망_서비스내역.txt";
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  }
+
 
     // 로그인 함수
     function login() {
@@ -732,7 +744,7 @@ body {
       <button class="save" onclick="saveData()">💾 저장</button>
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
       <button class="logout" onclick="logout()">로그아웃</button>
-      <button class="save" onclick="downloadExcel()">📥 엑셀로 저장</button>
+      <button onclick="downloadAsText()">📝 텍스트로 저장</button>
       <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
     </div>
 
@@ -858,7 +870,6 @@ body {
   background-color: #f0f0f0; /* 이미지 깨졌을 때 배경 처리 */
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.0/xlsx.full.min.js"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
