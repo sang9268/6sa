@@ -587,9 +587,6 @@ function deleteRow() {
       font-weight: bold;
     }
 
-tbody tr:nth-child(even) {
-  background-color: #fffbe6 !important;
-}
 
     td[contenteditable] {
       background-color: #fffbe6;
@@ -843,7 +840,6 @@ tbody tr:nth-child(even) {
 
     th,
     td {
-      background-color: #fffbe6; /* 연노랑 */
       border: 1px solid #ccc;
       padding: 12px;
       text-align: center;
@@ -853,10 +849,11 @@ tbody tr:nth-child(even) {
       background-color: #f2f2f2;
       font-weight: bold;
     }
-
+	  
 	tbody tr {
-	  background-color: #fffbe6;
+	  background-color: inherit;
 	}
+
     td[contenteditable] {
       background-color: #fffbe6;
       /* 편집 가능한 셀 배경색 */
