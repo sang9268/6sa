@@ -320,7 +320,6 @@ function onContentChange(id, text) {
 	    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
-            <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
 		<td>
   		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
    		 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
@@ -328,6 +327,8 @@ function onContentChange(id, text) {
   		  `).join('')}
  		 </select>
 		</td>
+            <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
+
 
 ${receivers.map(rcv => `
   <td>
@@ -364,8 +365,8 @@ ${receivers.map(rcv => `
 		  <td></td>
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
+    		  <td>LGU+</td>
 		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td>LGU+</td>
 		  <td colspan="12" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
