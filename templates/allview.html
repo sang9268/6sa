@@ -42,9 +42,9 @@
         <th>번호</th>
         <th>날짜</th>
         <th>시간</th>
-        <th>내용</th>
         <th>송출사</th>
-        <th>숨김 여부</th>
+        <th>내용</th>
+        <th colspan="12">숨김 여부</th> <!-- ✅ 수정: colspan="12" -->
       </tr>
     </thead>
     <tbody></tbody>
@@ -82,8 +82,8 @@
           <td>${index--}</td>
           <td>${data.date || ''}</td>
           <td>${data.time || ''}</td>
-          <td>${data.content || ''}</td>
           <td>${data.sender || ''}</td>
+          <td>${data.content || ''}</td>
           <td>${data.hidden ? '숨김' : '표시'}</td>
         `;
         tbody.appendChild(tr);
