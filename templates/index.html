@@ -470,7 +470,7 @@ ${receivers.map(rcv => `
       alert("저장되었습니다!");
     }
 
-	  function registerContent() {
+function registerContent() {
   const content = document.getElementById("inputContent").value.trim();
   const sender = document.getElementById("inputSender").value;
   const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
@@ -480,8 +480,25 @@ ${receivers.map(rcv => `
     return;
   }
 
+  // ✅ 현재 날짜 및 시간 계산
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+  ].join('-');
+  const time = [
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0')
+  ].join(':');
+
+  // ✅ Firestore에 저장할 데이터 구성
   const rowData = {
-    date: '', time: '', content: content, sender: sender,
+    date: date,
+    time: time,
+    content: content,
+    sender: sender,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     hidden: false,
     broadcastStatus: "송출전"
@@ -501,6 +518,7 @@ ${receivers.map(rcv => `
     document.getElementById("inputContent").value = "";
   });
 }
+
 
 function deleteRowById(id) {
   if (confirm("정말 이 행을 삭제하시겠습니까?")) {
@@ -898,50 +916,101 @@ document.addEventListener("DOMContentLoaded", function () {
   <div id="dateCounts" style="margin-top: 20px;"></div>
   
   <!-- 실시간 서비스 페이지 -->
-  <div id="service-container" style="display: none;">
-    <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
+	
+<span id="currentUser" style="
+  background: #e0f7fa;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #00796b;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+">
+  사용자명
+</span>
 
-	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
- 	 <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
-  	  <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
-	</div>
+<button onclick="logout()" style="
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  background-color: #d32f2f;
+  color: white;
+  border-radius: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: background-color 0.2s ease;
+">
+  로그아웃
+</button>
+
 	  
-	  
+    <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
+	  	  
 <div style="
-  max-width: 500px;
-  margin: 30px auto;
-  padding: 30px 20px;
-  background: linear-gradient(to bottom right, #fff5f7, #ffeef1);
-  border: 2px solid #ffb6c1;
-  border-radius: 16px;
-  box-shadow: 0 8px 16px rgba(255, 182, 193, 0.3);
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 40px 30px;
+  background: linear-gradient(to bottom right, #fff0f5, #ffe6ea);
+  border: 3px solid #ff99b8;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(255, 105, 135, 0.3);
   text-align: center;
+  font-size: 18px;
 ">
 
-	  <h2 style="margin-bottom: 20px;">내용 등록</h2>
-	  <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;" />
-	  <select id="inputSender" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
-	    <option value="SBS">SBS</option>
-	    <option value="KBS">KBS</option>
-	    <option value="MBC">MBC</option>
-	    <option value="MBN">MBN</option>
-	    <option value="YTN">YTN</option>
-	    <option value="OBS">OBS</option>
-	    <option value="LGU+">LGU+</option>
-	  </select>
-	
-	  <div style="margin-bottom: 15px;">
-	    <p style="margin-bottom: 6px;">이 내용에서 제외할 수신사 선택</p>
-	    <label><input type="checkbox" value="KBS" /> KBS</label>
-	    <label><input type="checkbox" value="MBC" /> MBC</label>
-	    <label><input type="checkbox" value="SBS" /> SBS</label>
-	    <label><input type="checkbox" value="MBN" /> MBN</label>
-	    <label><input type="checkbox" value="YTN" /> YTN</label>
-	    <label><input type="checkbox" value="OBS" /> OBS</label>
-	  </div>
-	
-	  <button onclick="registerContent()" style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; font-weight: bold;">등록</button>
-	</div>
+  <h2 style="margin-bottom: 25px; font-size: 24px; color: #e91e63;">📋 내용 등록</h2>
+
+  <input id="inputContent" type="text" placeholder="내용 입력" style="
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 18px;
+  " />
+
+  <select id="inputSender" style="
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    font-size: 18px;
+  ">
+    <option value="SBS">SBS</option>
+    <option value="KBS">KBS</option>
+    <option value="MBC">MBC</option>
+    <option value="MBN">MBN</option>
+    <option value="YTN">YTN</option>
+    <option value="OBS">OBS</option>
+    <option value="LGU+">LGU+</option>
+  </select>
+
+  <div style="margin-bottom: 20px;">
+    <p style="margin-bottom: 8px; font-weight: bold;">📺 제외할 수신사 선택</p>
+    <label style="margin-right: 10px;"><input type="checkbox" value="KBS" /> KBS</label>
+    <label style="margin-right: 10px;"><input type="checkbox" value="MBC" /> MBC</label>
+    <label style="margin-right: 10px;"><input type="checkbox" value="SBS" /> SBS</label>
+    <label style="margin-right: 10px;"><input type="checkbox" value="MBN" /> MBN</label>
+    <label style="margin-right: 10px;"><input type="checkbox" value="YTN" /> YTN</label>
+    <label><input type="checkbox" value="OBS" /> OBS</label>
+  </div>
+
+  <button onclick="registerContent()" style="
+    width: 100%;
+    padding: 16px;
+    font-size: 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+  ">
+    ✅ 등록하기
+  </button>
+</div>
+
 
   <!--  <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> 로그인한 사용자 표시 -->
 
