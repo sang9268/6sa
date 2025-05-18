@@ -183,7 +183,7 @@ function openAllRows() {
             <td>${data.sender || ''}</td>
             <td colspan="6">숨김 여부: ${data.hidden ? '✅ 숨김' : '❌ 표시중'}</td>
 	    <td>
-	    <button onclick="deleteRowById('${doc.id}')">삭제</button>
+	    <button onclick="deleteRowById('${doc.id}')">행 삭제</button>
 	    </td>
           `;
           tbody.appendChild(tr);
@@ -916,12 +916,13 @@ document.addEventListener("DOMContentLoaded", function () {
   
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
-    <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
 
-	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
- 	 <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
+	<div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
+ 	  <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
   	  <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
 	</div>
+	  
+    <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
 	  
 	  
 <div style="
@@ -1005,7 +1006,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>
     <div class="footer-button-container">
     <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔 가청 요청</button>
-    <button id="refreshButton" class="refresh">🔃웹페이지 새로고침</button>
+  <!--  <button id="refreshButton" class="refresh">🔃웹페이지 새로고침</button> -->
     <button onclick="openAllView()">🧾 이력 보기</button>
   <!--  <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button> -->
     <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
