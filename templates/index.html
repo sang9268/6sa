@@ -78,15 +78,15 @@ function toggleAlarm() {
     document.getElementById("alarmSound").pause();
     document.getElementById("alarmSound").currentTime = 0;
     isAlarmActive = false;
-    btn.innerText = "🔔 가청 요청";
+    btn.innerText = "🔔";
     btn.classList.remove("stop");
     btn.classList.add("send");
   } else {
-    // 전체 가청 요청 (서버 상태 변경)
+    // 전체 자료송출 알림 (서버 상태 변경)
     localStorage.removeItem("alarmMuted");
     sendAlarm();
     isAlarmActive = true;
-    btn.innerText = "⏹ 가청 정지";
+    btn.innerText = "⏹ 가청 알림 중단";
     btn.classList.remove("send");
     btn.classList.add("stop");
   }
@@ -284,14 +284,14 @@ function listenToAlarmStatus() {
     if (alarmStatus && alarmStatus.isAlarmActive && !isMuted) {
       document.getElementById("alarmSound").play();
       isAlarmActive = true;
-      btn.innerText = "⏹ 가청 정지";
+      btn.innerText = "⏹ 가청 알림 중단";
       btn.classList.remove("send");
       btn.classList.add("stop");
     } else {
       document.getElementById("alarmSound").pause();
       document.getElementById("alarmSound").currentTime = 0;
       isAlarmActive = false;
-      btn.innerText = "🔔 가청 요청";
+      btn.innerText = "🔔 자료송출 알림";
       btn.classList.remove("stop");
       btn.classList.add("send");
     }
