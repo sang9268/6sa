@@ -573,6 +573,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // 🔊 알람 사전 재생 허용을 위한 무음 플레이
+  const alarm = document.getElementById("alarmSound");
+  if (alarm) {
+    alarm.volume = 0;
+    alarm.play().then(() => {
+      alarm.pause();
+      alarm.currentTime = 0;
+      alarm.volume = 1.0;
+      console.log("🔔 알람 사운드 미리 재생 준비 완료");
+    }).catch((e) => {
+      console.warn("❌ 오디오 미리 재생 실패:", e);
+    });
+  }
+
   // ✅ 접속 직후부터 1분 간격 자동 새로고침
   setInterval(function () {
     window.location.reload();
