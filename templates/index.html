@@ -175,6 +175,9 @@ function openAllRows() {
             <td>${data.content || ''}</td>
             <td>${data.sender || ''}</td>
             <td colspan="6">숨김 여부: ${data.hidden ? '✅ 숨김' : '❌ 표시중'}</td>
+	    <td>
+	    <button onclick="deleteRowById('${doc.id}')">삭제</button>
+	    </td>
           `;
           tbody.appendChild(tr);
         });
@@ -407,12 +410,13 @@ ${receivers.map(rcv => `
     		  <td>LGU+</td>
 		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
 		  <td colspan="12" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
+ 		  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
 		`;
     		tbody.appendChild(fixedRow);
       });
     }
 
-		  function toggleView() {
+ 	function toggleView() {
 	  const btn = document.getElementById("toggleViewButton");
 	
 	  if (isShowingAll) {
@@ -529,10 +533,20 @@ ${receivers.map(rcv => `
   });
 }
 
-	  
-	  
+function deleteRowById(id) {
+  if (confirm("정말 이 행을 삭제하시겠습니까?")) {
+    tableRef.doc(id).delete().then(() => {
+      alert("삭제되었습니다.");
+      location.reload(); // 페이지 새로고침
+    }).catch(error => {
+      console.error("삭제 중 오류:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    });
+  }
+}
+	  	  
 
-    // 행 숨기기 함수
+    // 행 삭제 함수
 function deleteRow() {
   const checkedBoxes = document.querySelectorAll("#logTable tbody input[type='checkbox']:checked");
   const deletePromises = [];
@@ -725,6 +739,36 @@ function deleteRow() {
     <div class="error-message" id="error-message"></div> <!-- 오류 메시지 표시 -->
   </div>
 
+<style>
+  /* 수신사 로고 관련 스타일 */
+
+  /* 🔽 여기 아래에 추가 */
+  input[type="text"], select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ffb6c1;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: #fffafd;
+    box-sizing: border-box;
+  }
+
+  input[type="text"]:focus,
+  select:focus {
+    outline: none;
+    border-color: #ff69b4;
+    box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);
+  }
+
+  input[type="checkbox"] {
+    accent-color: #ff69b4;
+    transform: scale(1.2);
+    margin-right: 4px;
+  }
+</style>
+
+	
 
   <style>
 
@@ -887,7 +931,24 @@ function deleteRow() {
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
     <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
-		  <div style="max-width: 400px; margin: 0 auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center;">
+
+	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
+ 	 <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
+  	  <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
+	</div>
+	  
+	  
+<div style="
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 30px 20px;
+  background: linear-gradient(to bottom right, #fff5f7, #ffeef1);
+  border: 2px solid #ffb6c1;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(255, 182, 193, 0.3);
+  text-align: center;
+">
+
 	  <h2 style="margin-bottom: 20px;">내용 등록</h2>
 	  <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;" />
 	  <select id="inputSender" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
@@ -914,14 +975,11 @@ function deleteRow() {
 	</div>
 
   <!--  <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> 로그인한 사용자 표시 -->
-	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
-  <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
-    <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
-</div>
+
 
   <div class="button-container header-fixed">
     <!--  <button class="add" onclick="addRow()">➕ 행 추가</button> -->
-      <button class="delete" onclick="deleteRow()">🗑 행 삭제</button>
+    <!--  <button class="delete" onclick="deleteRow()">🗑 행 삭제</button> -->
     <!--      <button class="save" onclick="saveData()">💾 저장</button> -->
     <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
     </div>
@@ -945,6 +1003,7 @@ function deleteRow() {
 	  <th rowspan="2">송출사</th>
           <th rowspan="2">내용</th>
           <th colspan="12">수신사</th>
+	  <th rowspan="2">상태/관리</th>
         </tr>
 <tr>
 <th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
