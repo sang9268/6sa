@@ -470,7 +470,7 @@ ${receivers.map(rcv => `
       alert("저장되었습니다!");
     }
 
-	  function registerContent() {
+function registerContent() {
   const content = document.getElementById("inputContent").value.trim();
   const sender = document.getElementById("inputSender").value;
   const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
@@ -480,8 +480,24 @@ ${receivers.map(rcv => `
     return;
   }
 
+  // 현재 날짜 및 시간 계산
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+  ].join('-');
+  const time = [
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+    String(now.getSeconds()).padStart(2, '0')
+  ].join(':');
+
   const rowData = {
-    date: '', time: '', content: content, sender: sender,
+    date: date,
+    time: time,
+    content: content,
+    sender: sender,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     hidden: false,
     broadcastStatus: "송출전"
@@ -501,6 +517,7 @@ ${receivers.map(rcv => `
     document.getElementById("inputContent").value = "";
   });
 }
+
 
 function deleteRowById(id) {
   if (confirm("정말 이 행을 삭제하시겠습니까?")) {
