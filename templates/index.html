@@ -21,91 +21,28 @@
     const db = firebase.firestore();
     const tableRef = db.collection("logTable");
     const alarmRef = db.collection("system").doc("alarmStatus"); // Firestore에서 알람 상태를 관리
-    const auth = firebase.auth();
 
 	let isShowingAll = false; // false = 기본 보기
 	let isAlarmActive = false; // 기본값: 정지 상태
 
 
-// 로그인 상태 확인 함수
-function checkLogin() {
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      // 로그인 상태
-      document.getElementById("login-container").style.display = "none";
-      document.getElementById("service-container").style.display = "block";
-      document.getElementById("currentUser").innerText = user.email;
-      loadTable();
-      listenToAlarmStatus();
-
-      // 기본 송출사 설정 (예: 도메인 앞부분을 사용)
-      const senderSelect = document.getElementById("inputSender");
-      if (senderSelect) {
-        const domainPart = user.email.split('@')[0].toUpperCase(); // 예: kbs@domain.com → KBS
-        senderSelect.value = domainPart;
+    // 로그인 상태 확인 함수
+    function checkLogin() {
+      const currentUser = localStorage.getItem("username");
+      if (currentUser) {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("service-container").style.display = "block";
+        document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
+        loadTable();
+        listenToAlarmStatus(); // 알람 상태 리스너 시작
+	const senderSelect = document.getElementById("inputSender");
+        if (senderSelect) senderSelect.value = currentUser.toUpperCase();  // 선택 기본값 설정
+      } else {
+        document.getElementById("login-container").style.display = "block";
+        document.getElementById("service-container").style.display = "none";
       }
-    } else {
-      // 로그아웃 상태
-      document.getElementById("login-container").style.display = "block";
-      document.getElementById("service-container").style.display = "none";
     }
-  });
-}
 
-
-// 회원가입
-function signUp() {
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
-
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(userCredential => {
-      alert("회원가입 성공");
-    })
-    .catch(error => {
-      alert("회원가입 오류: " + error.message);
-    });
-}
-
-// 로그인
-function login() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(userCredential => {
-      const user = userCredential.user;
-      document.getElementById("login-container").style.display = "none";
-      document.getElementById("service-container").style.display = "block";
-      document.getElementById("currentUser").innerText = user.email;
-    })
-    .catch(error => {
-      document.getElementById("error-message").innerText = error.message;
-    });
-}
-
-// 로그아웃
-function logout() {
-  auth.signOut().then(() => {
-    location.reload();
-  });
-}
-
-function register() {
-  const email = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-
-  auth.createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      alert("회원가입 완료");
-      login();  // 자동 로그인
-    })
-    .catch((error) => {
-      alert("회원가입 실패: " + error.message);
-    });
-}
-
-	  
 function deleteAllhides() {
   tableRef
     .orderBy("createdAt", "desc")
@@ -785,7 +722,6 @@ document.addEventListener("DOMContentLoaded", function () {
     <input type="text" id="username" placeholder="아이디" required />
     <input type="password" id="password" placeholder="비밀번호" required />
     <button onclick="login()">로그인</button>
-    <button onclick="register()">회원가입</button>
     <div class="error-message" id="error-message"></div> <!-- 오류 메시지 표시 -->
   </div>
 
