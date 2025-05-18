@@ -317,7 +317,7 @@ function onContentChange(id, text) {
           tr.innerHTML = `
   	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
 	    <td><input type="checkbox" data-id="${rowId}" /></td>
-	    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td>
+	<!--    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td> -->
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
 		<td>
@@ -361,7 +361,6 @@ ${receivers.map(rcv => `
 		const fixedRow = document.createElement("tr");
 		fixedRow.innerHTML = `
 		  <td>고정</td>
-		  <td></td>
 		  <td></td>
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
@@ -799,15 +798,20 @@ function deleteRow() {
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
     <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
-    <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> <!-- 로그인한 사용자 표시 -->
+  <!--  <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> 로그인한 사용자 표시 -->
+	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
+  <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
+    <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
+</div>
+
   <div class="button-container header-fixed">
       <button class="send" onclick="sendAlarm()">🔔 가청(요청)</button>
       <button class="stop" onclick="stopAlarm()">⏹ 가청정지(확인)</button>
-      <button class="add" onclick="addRow()">➕ 행 추가</button>
+    <!--  <button class="add" onclick="addRow()">➕ 행 추가</button> -->
       <button class="delete" onclick="deleteRow()">🗑 행 삭제</button>
-      <button class="save" onclick="saveData()">💾 저장</button>
+    <!--      <button class="save" onclick="saveData()">💾 저장</button> -->
       <button id="refreshButton" class="refresh">🔃 새로고침</button>
-      <button class="logout" onclick="logout()">로그아웃</button>
+    <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
       <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
     </div>
 
@@ -825,7 +829,7 @@ function deleteRow() {
         <tr>
 	  <th rowspan="2">번호</th>
           <th rowspan="2">✔</th>
-	  <th rowspan="2">송출구분</th>  <!-- ✅ 여기 추가 -->
+	<!--  <th rowspan="2">송출구분</th>   ✅ 여기 추가 -->
           <th rowspan="2">날짜</th>
           <th rowspan="2">올린시간</th>
 	  <th rowspan="2">송출사</th>
