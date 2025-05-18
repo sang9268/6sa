@@ -73,19 +73,25 @@ function toggleAlarm() {
   const btn = document.getElementById("alarmToggleButton");
 
   if (isAlarmActive) {
-    stopAlarm();
+    // 개인 계정만 정지
+    localStorage.setItem("alarmMuted", "true");
+    document.getElementById("alarmSound").pause();
+    document.getElementById("alarmSound").currentTime = 0;
+    isAlarmActive = false;
     btn.innerText = "🔔 가청 요청";
     btn.classList.remove("stop");
     btn.classList.add("send");
-    isAlarmActive = false;
   } else {
+    // 전체 가청 요청 (서버 상태 변경)
+    localStorage.removeItem("alarmMuted");
     sendAlarm();
+    isAlarmActive = true;
     btn.innerText = "⏹ 가청 정지";
     btn.classList.remove("send");
     btn.classList.add("stop");
-    isAlarmActive = true;
   }
 }
+
 
 
 function toggleBroadcastStatus(button) {
@@ -269,34 +275,29 @@ function onContentChange(id, text) {
 
     
     // 알람 상태 리스너
-	function listenToAlarmStatus() {
-	  alarmRef.onSnapshot(doc => {
-	    const alarmStatus = doc.data();
-	    const btn = document.getElementById("alarmToggleButton");
-	
-	    if (alarmStatus && alarmStatus.isAlarmActive) {
-	      document.getElementById("alarmSound").play();
-	      isAlarmActive = true;
-	
-	      if (btn) {
-	        btn.innerText = "⏹ 가청 정지";
-	        btn.classList.remove("send");
-	        btn.classList.add("stop");
-	      }
-	
-	    } else {
-	      document.getElementById("alarmSound").pause();
-	      document.getElementById("alarmSound").currentTime = 0;
-	      isAlarmActive = false;
-	
-	      if (btn) {
-	        btn.innerText = "🔔 가청 요청";
-	        btn.classList.remove("stop");
-	        btn.classList.add("send");
-	      }
-	    }
-	  });
-	}
+function listenToAlarmStatus() {
+  alarmRef.onSnapshot(doc => {
+    const alarmStatus = doc.data();
+    const btn = document.getElementById("alarmToggleButton");
+    const isMuted = localStorage.getItem("alarmMuted") === "true";
+
+    if (alarmStatus && alarmStatus.isAlarmActive && !isMuted) {
+      document.getElementById("alarmSound").play();
+      isAlarmActive = true;
+      btn.innerText = "⏹ 가청 정지";
+      btn.classList.remove("send");
+      btn.classList.add("stop");
+    } else {
+      document.getElementById("alarmSound").pause();
+      document.getElementById("alarmSound").currentTime = 0;
+      isAlarmActive = false;
+      btn.innerText = "🔔 가청 요청";
+      btn.classList.remove("stop");
+      btn.classList.add("send");
+    }
+  });
+}
+
 
 
     // 알람 시작 함수
@@ -539,20 +540,20 @@ function deleteRow() {
     // 페이지 로딩 시 로그인 상태 확인
     document.addEventListener("DOMContentLoaded", checkLogin);
 
-    // 새로고침 버튼 클릭 시 페이지 리프레시
-    document.addEventListener("DOMContentLoaded", function () {
-      const refreshButton = document.getElementById("refreshButton");
-      if (refreshButton) {
-        refreshButton.addEventListener("click", function () {
-          window.location.reload(); // 페이지 리프레시
-        });
-      }
+document.addEventListener("DOMContentLoaded", function () {
+  const refreshButton = document.getElementById("refreshButton");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", function () {
+      window.location.reload(); // 수동 새로고침
     });
+  }
 
-    // 1분마다 자동으로 페이지 리프레시
-    setInterval(function () {
-      window.location.reload(); // 페이지 리프레시
-    }, 300000); // 60000ms = 1분
+  // ✅ 접속 직후부터 1분 간격 자동 새로고침
+  setInterval(function () {
+    window.location.reload();
+  }, 60000); // 60000ms = 1분
+});
+
   </script>
   <style>
 
@@ -988,15 +989,13 @@ function deleteRow() {
 </div>
     <div class="footer-button-container">
     <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔 가청 요청</button>
-    <button id="refreshButton" class="refresh">🔃 새로고침</button>
+    <button id="refreshButton" class="refresh">🔃웹페이지 새로고침</button>
+    <button onclick="openAllView()">🧾 이력 보기</button>
   <!--  <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button> -->
     <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
     <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 숨김</button>
     <!-- <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button> -->
     </div>
-  <div class="footer-comment">
-  ⚠️ 처음 웹페이지 접속하시면, 새로고침 버튼을 한번 눌러주세요(그 이후로는 1분간격으로 자동 새로고침됩니다.)
-  </div>
 
   </div>
 
