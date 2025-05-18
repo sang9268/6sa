@@ -72,20 +72,20 @@ function deleteAllhides() {
 function toggleAlarm() {
   const isMuted = localStorage.getItem("alarmMuted") === "true";
 
+  // Firestore 상태를 기반으로 토글 (공용 알람 상태 반영)
   if (isAlarmActive) {
-    // 👉 알람이 울리고 있는 상태일 때: 개인 음소거 (다른 계정엔 영향 없음)
-    localStorage.setItem("alarmMuted", "true");
-    const alarm = document.getElementById("alarmSound");
-    alarm.pause();
-    alarm.currentTime = 0;
-    console.log("🔇 알람 음소거 (개인)");
+    // 알람 끄기 (모든 사용자에게 반영)
+    stopAlarm(); // alarmRef.set({ isAlarmActive: false })
+    console.log("🔇 전체 알람 중지 요청");
   } else {
-    // 👉 알람이 꺼져 있을 때: 서버에 알람 상태 ON 요청
-    localStorage.removeItem("alarmMuted");
-    sendAlarm(); // Firestore → isAlarmActive: true
+    // 알람 시작 (모든 사용자에게 반영)
+    localStorage.removeItem("alarmMuted"); // 개인 음소거 해제
+    sendAlarm(); // alarmRef.set({ isAlarmActive: true })
     console.log("🔔 전체 알람 시작 요청");
   }
 }
+
+
 
 
 
