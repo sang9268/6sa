@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 
 <head>
@@ -22,359 +23,369 @@
     const tableRef = db.collection("logTable");
     const alarmRef = db.collection("system").doc("alarmStatus"); // Firestore에서 알람 상태를 관리
 
-	let isShowingAll = false; // false = 기본 보기
-	let isAlarmActive = false; // 기본값: 정지 상태
+```
+let isShowingAll = false; // false = 기본 보기
+let isAlarmActive = false; // 기본값: 정지 상태
 
 
-    // 로그인 상태 확인 함수
-    function checkLogin() {
-      const currentUser = localStorage.getItem("username");
-      if (currentUser) {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("service-container").style.display = "block";
-        document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
-        loadTable();
-        listenToAlarmStatus(); // 알람 상태 리스너 시작
-	const senderSelect = document.getElementById("inputSender");
-        if (senderSelect) senderSelect.value = currentUser.toUpperCase();  // 선택 기본값 설정
-      } else {
-        document.getElementById("login-container").style.display = "block";
-        document.getElementById("service-container").style.display = "none";
-      }
-    }
+// 로그인 상태 확인 함수
+function checkLogin() {
+  const currentUser = localStorage.getItem("username");
+  if (currentUser) {
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("service-container").style.display = "block";
+    document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
+    loadTable();
+    listenToAlarmStatus(); // 알람 상태 리스너 시작
+const senderSelect = document.getElementById("inputSender");
+    if (senderSelect) senderSelect.value = currentUser.toUpperCase();  // 선택 기본값 설정
+  } else {
+    document.getElementById("login-container").style.display = "block";
+    document.getElementById("service-container").style.display = "none";
+  }
+}
+```
 
 function deleteAllhides() {
-  tableRef
-    .orderBy("createdAt", "desc")
-    .get()
-    .then(snapshot => {
-      const docs = snapshot.docs;
+tableRef
+.orderBy("createdAt", "desc")
+.get()
+.then(snapshot => {
+const docs = snapshot.docs;
 
-      const hidePromises = [];
-      for (let i = 0; i < docs.length; i++) {
-        const data = docs[i].data();
-        
-        // 고정 행 내용과 같은 경우 제외
-        if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
-          continue; // 고정 행은 숨기지 않음
-        }
+```
+  const hidePromises = [];
+  for (let i = 0; i < docs.length; i++) {
+    const data = docs[i].data();
+    
+    // 고정 행 내용과 같은 경우 제외
+    if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+      continue; // 고정 행은 숨기지 않음
+    }
 
-        hidePromises.push(docs[i].ref.update({ hidden: true }));
-      }
+    hidePromises.push(docs[i].ref.update({ hidden: true }));
+  }
 
-      Promise.all(hidePromises).then(() => {
-        loadTable();
-        alert("모든 행을 숨겼습니다 (고정 행은 유지됩니다).");
-      });
-    });
+  Promise.all(hidePromises).then(() => {
+    loadTable();
+    alert("모든 행을 숨겼습니다 (고정 행은 유지됩니다).");
+  });
+});
+```
+
 }
 
 function toggleAlarm() {
-  const btn = document.getElementById("alarmToggleButton");
+const btn = document.getElementById("alarmToggleButton");
 
-  if (isAlarmActive) {
-    // 개인 계정만 정지
-    localStorage.setItem("alarmMuted", "true");
-    document.getElementById("alarmSound").pause();
-    document.getElementById("alarmSound").currentTime = 0;
-    isAlarmActive = false;
-    btn.innerText = "🔔 가청 요청";
-    btn.classList.remove("stop");
-    btn.classList.add("send");
-  } else {
-    // 전체 가청 요청 (서버 상태 변경)
-    localStorage.removeItem("alarmMuted");
-    sendAlarm();
-    isAlarmActive = true;
-    btn.innerText = "⏹ 가청 정지";
-    btn.classList.remove("send");
-    btn.classList.add("stop");
-  }
+if (isAlarmActive) {
+// 개인 계정만 정지
+localStorage.setItem("alarmMuted", "true");
+document.getElementById("alarmSound").pause();
+document.getElementById("alarmSound").currentTime = 0;
+isAlarmActive = false;
+btn.innerText = "🔔 가청 요청";
+btn.classList.remove("stop");
+btn.classList.add("send");
+} else {
+// 전체 가청 요청 (서버 상태 변경)
+localStorage.removeItem("alarmMuted");
+sendAlarm();
+isAlarmActive = true;
+btn.innerText = "⏹ 가청 정지";
+btn.classList.remove("send");
+btn.classList.add("stop");
 }
-
-
+}
 
 function toggleBroadcastStatus(button) {
-  const tr = button.closest("tr");
-  const rowId = tr.getAttribute("data-row-id");
-  const current = button.innerText;
+const tr = button.closest("tr");
+const rowId = tr.getAttribute("data-row-id");
+const current = button.innerText;
 
-  let nextState, color;
-  if (current === "송출전") {
-    nextState = "송출중";
-    color = "#ffcccc";  // 연빨강
-  } else if (current === "송출중") {
-    nextState = "송출후";
-    color = "#dcdcdc";  // 회색
-  } else {
-    nextState = "송출전";
-    color = "#fffbe6";  // 연노랑
-  }
-
-  // 버튼 텍스트 및 행 색상 변경
-  button.innerText = nextState;
-  tr.style.backgroundColor = color;
-
-  // Firestore에 상태 업데이트
-  if (rowId) {
-    tableRef.doc(rowId).update({
-      broadcastStatus: nextState
-    });
-  }
+let nextState, color;
+if (current === "송출전") {
+nextState = "송출중";
+color = "#ffcccc";  // 연빨강
+} else if (current === "송출중") {
+nextState = "송출후";
+color = "#dcdcdc";  // 회색
+} else {
+nextState = "송출전";
+color = "#fffbe6";  // 연노랑
 }
 
+// 버튼 텍스트 및 행 색상 변경
+button.innerText = nextState;
+tr.style.backgroundColor = color;
 
-	  
+// Firestore에 상태 업데이트
+if (rowId) {
+tableRef.doc(rowId).update({
+broadcastStatus: nextState
+});
+}
+}
+
 function deleteAllRows() {
-  if (!confirm("정말 모든 행을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+if (!confirm("정말 모든 행을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
 
-  tableRef.get().then(snapshot => {
-    const deletePromises = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
+tableRef.get().then(snapshot => {
+const deletePromises = \[];
+snapshot.forEach(doc => {
+const data = doc.data();
 
-      // ✅ 고정행은 삭제하지 않음
-      if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
-        return; // 삭제 제외
-      }
+```
+  // ✅ 고정행은 삭제하지 않음
+  if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+    return; // 삭제 제외
+  }
 
-      deletePromises.push(doc.ref.delete());
-    });
+  deletePromises.push(doc.ref.delete());
+});
 
-    return Promise.all(deletePromises);
-  }).then(() => {
-    alert("모든 행이 완전히 삭제되었습니다 (고정 행 제외).");
-    loadTable();
-  }).catch(error => {
-    console.error("삭제 오류:", error);
-    alert("삭제 중 오류가 발생했습니다.");
-  });
+return Promise.all(deletePromises);
+```
+
+}).then(() => {
+alert("모든 행이 완전히 삭제되었습니다 (고정 행 제외).");
+loadTable();
+}).catch(error => {
+console.error("삭제 오류:", error);
+alert("삭제 중 오류가 발생했습니다.");
+});
 }
 
-
-
-  // 건수 보기 함수
-  function openAllView() {
-    window.open("allview.html", "_blank", "width=1200,height=800");
-  }
+// 건수 보기 함수
+function openAllView() {
+window\.open("allview\.html", "\_blank", "width=1200,height=800");
+}
 
 // 전체 보기 함수
 function openAllRows() {
-    // hidden 여부에 관계없이 전체 로우 보여주기
-    tableRef
-      .orderBy('createdAt', 'desc')
-      .get()
-      .then(snapshot => {
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
-        const docs = snapshot.docs;
-        const total = docs.length;
+// hidden 여부에 관계없이 전체 로우 보여주기
+tableRef
+.orderBy('createdAt', 'desc')
+.get()
+.then(snapshot => {
+const tbody = document.getElementById("tableBody");
+tbody.innerHTML = "";
+const docs = snapshot.docs;
+const total = docs.length;
 
-        docs.forEach((doc, index) => {
-          const data = doc.data();
-          const rowId = doc.id;
-          const tr = document.createElement("tr");
-          tr.setAttribute("data-row-id", rowId);
-          tr.innerHTML = `
-            <td>${total - index}</td>
-            <td>${data.date || ''}</td>
-            <td>${data.time || ''}</td>
-            <td>${data.content || ''}</td>
-            <td>${data.sender || ''}</td>
-            <td colspan="6">숨김 여부: ${data.hidden ? '✅ 숨김' : '❌ 표시중'}</td>
-	    <td>
-	    <button onclick="deleteRowById('${doc.id}')">삭제</button>
-	    </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      });
-
-  }
-
-function downloadAsExcel() {
-  const table = document.getElementById("logTable");
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.table_to_sheet(table);
-  XLSX.utils.book_append_sheet(wb, ws, "6사보도망");
-
-  // ✅ 오늘 날짜 구하기 (YYYY-MM-DD 형식)
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-
-  // ✅ 파일명에 날짜 추가
-  XLSX.writeFile(wb, `6사보도망_서비스내역_${todayStr}.xlsx`);
-}
-
-
-    // 로그인 함수
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const validUsers = {
-        "lgu+": "lgu+",
-        "kbs": "kbs",
-        "mbc": "mbc",
-        "sbs": "sbs",
-        "ytn": "ytn",
-        "mbn": "mbn",
-        "obs": "obs"
-      };
-
-      if (validUsers[username] && validUsers[username] === password) {
-        localStorage.setItem("username", username);
-        checkLogin();
-      } else {
-        document.getElementById("error-message").innerText = "아이디나 비밀번호가 틀렸습니다.";
-      }
-    }
-
-
-    // 로그아웃 함수
-    function logout() {
-      localStorage.removeItem("username");
-      checkLogin();
-    }
-
-    /**
- * 내용 셀 수정 후 호출됩니다.
- * @param {string} id    - Firestore 문서 ID
- * @param {string} text  - 입력된 내용
- */
-function onContentChange(id, text) {
-  // 내용이 비어있으면 아무 것도 안 함
-  if (!text.trim()) return;
-
-  const now = new Date();
-  // YYYY-MM-DD 포맷
-  const date = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'),
-    String(now.getDate()).padStart(2, '0')
-  ].join('-');
-  // HH:MM:SS 포맷
-  const time = [
-    String(now.getHours()).padStart(2, '0'),
-    String(now.getMinutes()).padStart(2, '0'),
-    String(now.getSeconds()).padStart(2, '0')
-  ].join(':');
-
-  // Firestore에 한꺼번에 업데이트
-  tableRef.doc(id).update({
-    content: text,
-    date: date,
-    time: time
-  }).then(() => {
-    loadTable();  // UI 새로고침
-  });
-}
-
-
-    
-    // 알람 상태 리스너
-function listenToAlarmStatus() {
-  alarmRef.onSnapshot(doc => {
-    const alarmStatus = doc.data();
-    const btn = document.getElementById("alarmToggleButton");
-    const isMuted = localStorage.getItem("alarmMuted") === "true";
-
-    if (alarmStatus && alarmStatus.isAlarmActive && !isMuted) {
-      document.getElementById("alarmSound").play();
-      isAlarmActive = true;
-      btn.innerText = "⏹ 가청 정지";
-      btn.classList.remove("send");
-      btn.classList.add("stop");
-    } else {
-      document.getElementById("alarmSound").pause();
-      document.getElementById("alarmSound").currentTime = 0;
-      isAlarmActive = false;
-      btn.innerText = "🔔 가청 요청";
-      btn.classList.remove("stop");
-      btn.classList.add("send");
-    }
-  });
-}
-
-
-
-    // 알람 시작 함수
-    function sendAlarm() {
-      alarmRef.set({isAlarmActive: true}).then(() => {
-        console.log("알람이 울렸습니다.");
-      });
-    }
-
-    // 알람 정지 함수
-    function stopAlarm() {
-      alarmRef.set({isAlarmActive: false}).then(() => {
-        console.log("알람이 정지되었습니다.");
-      });
-    }
-
-    // 데이터 로드 함수
-    function loadTable() {
-      const dateCounts = {}; // 이 줄을 loadTable() 함수 맨 위에 추가
-      const currentUser = localStorage.getItem("username"); // 로그인된 사용자
-      const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
-
-	tableRef
-    	.orderBy('createdAt','desc')   // 생성된 순서(오래된 것부터)로 정렬
-  	  .get()
-  	  .then(snapshot => {
-	const docs = snapshot.docs.filter(doc => !doc.data().hidden); // hidden이 true인 문서 제외
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = ""; // 테이블 초기화
-
-    const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
+```
     docs.forEach((doc, index) => {
       const data = doc.data();
       const rowId = doc.id;
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-row-id", rowId);
+      tr.innerHTML = `
+        <td>${total - index}</td>
+        <td>${data.date || ''}</td>
+        <td>${data.time || ''}</td>
+        <td>${data.content || ''}</td>
+        <td>${data.sender || ''}</td>
+        <td colspan="6">숨김 여부: ${data.hidden ? '✅ 숨김' : '❌ 표시중'}</td>
+    <td>
+    <button onclick="deleteRowById('${doc.id}')">삭제</button>
+    </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+```
 
-          const tr = document.createElement("tr");
-          tr.setAttribute("data-row-id", rowId);  // 행 ID를 data-row-id로 설정
+}
 
-	// ✅ 상태에 따라 배경색 지정
-	const status = data.broadcastStatus || "송출전";
-	let bgColor = "#fffbe6"; // 기본 송출전
-	if (status === "송출중") bgColor = "#ffcccc";
-	else if (status === "송출후") bgColor = "#dcdcdc";
-	tr.style.backgroundColor = bgColor;
+function downloadAsExcel() {
+const table = document.getElementById("logTable");
+const wb = XLSX.utils.book\_new();
+const ws = XLSX.utils.table\_to\_sheet(table);
+XLSX.utils.book\_append\_sheet(wb, ws, "6사보도망");
+
+// ✅ 오늘 날짜 구하기 (YYYY-MM-DD 형식)
+const now = new Date();
+const yyyy = now\.getFullYear();
+const mm = String(now\.getMonth() + 1).padStart(2, '0');
+const dd = String(now\.getDate()).padStart(2, '0');
+const todayStr = `${yyyy}-${mm}-${dd}`;
+
+// ✅ 파일명에 날짜 추가
+XLSX.writeFile(wb, `6사보도망_서비스내역_${todayStr}.xlsx`);
+}
+
+```
+// 로그인 함수
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const validUsers = {
+    "lgu+": "lgu+",
+    "kbs": "kbs",
+    "mbc": "mbc",
+    "sbs": "sbs",
+    "ytn": "ytn",
+    "mbn": "mbn",
+    "obs": "obs"
+  };
+
+  if (validUsers[username] && validUsers[username] === password) {
+    localStorage.setItem("username", username);
+    checkLogin();
+  } else {
+    document.getElementById("error-message").innerText = "아이디나 비밀번호가 틀렸습니다.";
+  }
+}
 
 
-          // 수신사별로 제외 상태를 체크하여, 해당 수신사에서 제외된 행만 숨김
-          let shouldDisplayRow = true;
+// 로그아웃 함수
+function logout() {
+  localStorage.removeItem("username");
+  checkLogin();
+}
 
-          receivers.forEach((name, idx) => {
-            // 로그인된 계정이 해당 수신사일 경우, 대소문자 구분 없이 비교
-            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "미수신") {
-              shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
-            }
-          });
+/**
+```
 
-          // 행을 숨기지 않도록 설정
-          if (!shouldDisplayRow) {
-            tr.style.display = "none";  // 해당 수신사에서 제외된 경우 해당 행을 숨김
-          }
+* 내용 셀 수정 후 호출됩니다.
+* @param {string} id    - Firestore 문서 ID
+* @param {string} text  - 입력된 내용
+  \*/
+  function onContentChange(id, text) {
+  // 내용이 비어있으면 아무 것도 안 함
+  if (!text.trim()) return;
 
-          tr.innerHTML = `
-  	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
-	<!--    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td> -->
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
-		<td>
-  		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
-   		 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
-   		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
-  		  `).join('')}
- 		 </select>
-		</td>
-            <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
+const now = new Date();
+// YYYY-MM-DD 포맷
+const date = \[
+now\.getFullYear(),
+String(now\.getMonth() + 1).padStart(2, '0'),
+String(now\.getDate()).padStart(2, '0')
+].join('-');
+// HH\:MM\:SS 포맷
+const time = \[
+String(now\.getHours()).padStart(2, '0'),
+String(now\.getMinutes()).padStart(2, '0'),
+String(now\.getSeconds()).padStart(2, '0')
+].join(':');
+
+// Firestore에 한꺼번에 업데이트
+tableRef.doc(id).update({
+content: text,
+date: date,
+time: time
+}).then(() => {
+loadTable();  // UI 새로고침
+});
+}
+
+```
+// 알람 상태 리스너
+```
+
+function listenToAlarmStatus() {
+alarmRef.onSnapshot(doc => {
+const alarmStatus = doc.data();
+const btn = document.getElementById("alarmToggleButton");
+const isMuted = localStorage.getItem("alarmMuted") === "true";
+
+```
+if (alarmStatus && alarmStatus.isAlarmActive && !isMuted) {
+  document.getElementById("alarmSound").play();
+  isAlarmActive = true;
+  btn.innerText = "⏹ 가청 정지";
+  btn.classList.remove("send");
+  btn.classList.add("stop");
+} else {
+  document.getElementById("alarmSound").pause();
+  document.getElementById("alarmSound").currentTime = 0;
+  isAlarmActive = false;
+  btn.innerText = "🔔 가청 요청";
+  btn.classList.remove("stop");
+  btn.classList.add("send");
+}
+```
+
+});
+}
+
+```
+// 알람 시작 함수
+function sendAlarm() {
+  alarmRef.set({isAlarmActive: true}).then(() => {
+    console.log("알람이 울렸습니다.");
+  });
+}
+
+// 알람 정지 함수
+function stopAlarm() {
+  alarmRef.set({isAlarmActive: false}).then(() => {
+    console.log("알람이 정지되었습니다.");
+  });
+}
+
+// 데이터 로드 함수
+function loadTable() {
+  const dateCounts = {}; // 이 줄을 loadTable() 함수 맨 위에 추가
+  const currentUser = localStorage.getItem("username"); // 로그인된 사용자
+  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
+
+tableRef
+	.orderBy('createdAt','desc')   // 생성된 순서(오래된 것부터)로 정렬
+  .get()
+  .then(snapshot => {
+const docs = snapshot.docs.filter(doc => !doc.data().hidden); // hidden이 true인 문서 제외
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = ""; // 테이블 초기화
+
+const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
+docs.forEach((doc, index) => {
+  const data = doc.data();
+  const rowId = doc.id;
+
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-row-id", rowId);  // 행 ID를 data-row-id로 설정
+
+// ✅ 상태에 따라 배경색 지정
+const status = data.broadcastStatus || "송출전";
+let bgColor = "#fffbe6"; // 기본 송출전
+if (status === "송출중") bgColor = "#ffcccc";
+else if (status === "송출후") bgColor = "#dcdcdc";
+tr.style.backgroundColor = bgColor;
 
 
-${receivers.map(rcv => `
+      // 수신사별로 제외 상태를 체크하여, 해당 수신사에서 제외된 행만 숨김
+      let shouldDisplayRow = true;
+
+      receivers.forEach((name, idx) => {
+        // 로그인된 계정이 해당 수신사일 경우, 대소문자 구분 없이 비교
+        if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "미수신") {
+          shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
+        }
+      });
+
+      // 행을 숨기지 않도록 설정
+      if (!shouldDisplayRow) {
+        tr.style.display = "none";  // 해당 수신사에서 제외된 경우 해당 행을 숨김
+      }
+
+      tr.innerHTML = `
+    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
+<!--    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td> -->
+        <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
+        <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
+	<td>
+	<select onchange="updateCell('${doc.id}', 'sender', this.value)">
+	 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
+	   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
+	  `).join('')}
+	 </select>
+	</td>
+        <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
+```
+
+\${receivers.map(rcv => \`
+
   <td>
     <button class="logo-${rcv.toLowerCase()}" onclick="toggleAck('${doc.id}', '${rcv}')">
       ${(data[rcv] && data[rcv].ack) || '확인!'}
@@ -385,90 +396,92 @@ ${receivers.map(rcv => `
     <button onclick="deleteRowById('${doc.id}')">삭제</button>
   </td>
 
-          `;
-          tbody.appendChild(tr);
-          // ⭐ 날짜별 건수 세기
-          if (data.date) {
-            if (dateCounts[data.date]) {
-              dateCounts[data.date]++;
-            } else {
-              dateCounts[data.date] = 1;
-            }
-          }
+```
+      `;
+      tbody.appendChild(tr);
+      // ⭐ 날짜별 건수 세기
+      if (data.date) {
+        if (dateCounts[data.date]) {
+          dateCounts[data.date]++;
+        } else {
+          dateCounts[data.date] = 1;
+        }
+      }
 
-        index++;  // ✅ 카운터 증가
-        });
-		// 고정된 첫 행 추가
-		const fixedRow = document.createElement("tr");
-		fixedRow.innerHTML = `
-		  <td>고정</td>
-		  <td>2025-xx-xx</td>
-		  <td>00:00:00</td>
-    		  <td>LGU+</td>
-		  <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
- 		  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
-		`;
-    		tbody.appendChild(fixedRow);
-      });
-    }
+    index++;  // ✅ 카운터 증가
+    });
+	  		  // 고정된 첫 행 추가
+	const fixedRow = document.createElement("tr");
+	fixedRow.innerHTML = `
+	  <td>고정</td>
+	  <td></td>
+	  <td>2025-xx-xx</td>
+	  <td>00:00:00</td>
+		  <td>LGU+</td>
+	  <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
+	  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
+	  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
+	`;
+		tbody.appendChild(fixedRow);
+  });
+}
 
- 	function toggleView() {
-	  const btn = document.getElementById("toggleViewButton");
-	
-	  if (isShowingAll) {
-	    // 기본 보기로 전환
-	    loadTable();
-	    btn.innerText = "📋 기본 보기";
-	    isShowingAll = false;
-	  } else {
-	    // 전체 보기로 전환
-	    openAllRows();
-	    btn.innerText = "📄 전체 보기";
-	    isShowingAll = true;
-	  }
-	}
+function toggleView() {
+  const btn = document.getElementById("toggleViewButton");
 
-    // 셀 업데이트 함수
-    function updateCell(id, field, value) {
-      tableRef.doc(id).update({[field]: value}).then(() => loadTable());
-    }
+  if (isShowingAll) {
+    // 기본 보기로 전환
+    loadTable();
+    btn.innerText = "📋 기본 보기";
+    isShowingAll = false;
+  } else {
+    // 전체 보기로 전환
+    openAllRows();
+    btn.innerText = "📄 전체 보기";
+    isShowingAll = true;
+  }
+}
 
-    // 확인 상태 토글
-    function toggleAck(id, rcv) {
-      const cellRef = tableRef.doc(id);
-      cellRef.get().then(doc => {
-        const data = doc.data();
-        const current = (data[rcv] && data[rcv].ack) || '확인!';
-        const updated = current === '확인!' ? '✅ 확인됨' : '확인!';
-        cellRef.update({[`${rcv}.ack`]: updated}).then(() => {
-          loadTable();
-        });
-      });
-    }
+// 셀 업데이트 함수
+function updateCell(id, field, value) {
+  tableRef.doc(id).update({[field]: value}).then(() => loadTable());
+}
+
+// 확인 상태 토글
+function toggleAck(id, rcv) {
+  const cellRef = tableRef.doc(id);
+  cellRef.get().then(doc => {
+    const data = doc.data();
+    const current = (data[rcv] && data[rcv].ack) || '확인!';
+    const updated = current === '확인!' ? '✅ 확인됨' : '확인!';
+    cellRef.update({[`${rcv}.ack`]: updated}).then(() => {
+      loadTable();
+    });
+  });
+}
 
 
-    // 행 추가 함수
-    function addRow() {
-      const rowData = {
-        date: '', time: '', content: '', sender: '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-	hidden: false,  // ✅ 숨김 여부
-  	broadcastStatus: "송출전",  // ✅ 버튼 상태 기본값
-      };
+// 행 추가 함수
+function addRow() {
+  const rowData = {
+    date: '', time: '', content: '', sender: '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+hidden: false,  // ✅ 숨김 여부
+broadcastStatus: "송출전",  // ✅ 버튼 상태 기본값
+  };
 
-      const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
-      receivers.forEach(rcv => {
-        rowData[rcv] = {ack: '확인!', exclude: '수신'};
-      });
-      tableRef.add(rowData).then(() => {
-        loadTable();
-      });
-    }
+  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
+  receivers.forEach(rcv => {
+    rowData[rcv] = {ack: '확인!', exclude: '수신'};
+  });
+  tableRef.add(rowData).then(() => {
+    loadTable();
+  });
+}
 
-    function saveData() {
-      alert("저장되었습니다!");
-    }
+function saveData() {
+  alert("저장되었습니다!");
+}
 
 function registerContent() {
   const content = document.getElementById("inputContent").value.trim();
@@ -521,197 +534,212 @@ function registerContent() {
 
 
 function deleteRowById(id) {
-  if (confirm("정말 이 행을 삭제하시겠습니까?")) {
-    tableRef.doc(id).delete().then(() => {
-      alert("삭제되었습니다.");
-      location.reload(); // 페이지 새로고침
-    }).catch(error => {
-      console.error("삭제 중 오류:", error);
-      alert("삭제 중 오류가 발생했습니다.");
-    });
-  }
+if (confirm("정말 이 행을 삭제하시겠습니까?")) {
+tableRef.doc(id).delete().then(() => {
+alert("삭제되었습니다.");
+location.reload(); // 페이지 새로고침
+}).catch(error => {
+console.error("삭제 중 오류:", error);
+alert("삭제 중 오류가 발생했습니다.");
+});
 }
-	  	  
+}
 
-    // 행 삭제 함수
+```
+// 행 삭제 함수
+```
+
 function deleteRow() {
-  const checkedBoxes = document.querySelectorAll("#logTable tbody input[type='checkbox']:checked");
-  const deletePromises = [];
+const checkedBoxes = document.querySelectorAll("#logTable tbody input\[type='checkbox']\:checked");
+const deletePromises = \[];
 
-  checkedBoxes.forEach(box => {
-    const id = box.getAttribute("data-id");
-    const row = box.closest("tr");
-    const isFixedRow = row && row.innerText.includes("🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)");
+checkedBoxes.forEach(box => {
+const id = box.getAttribute("data-id");
+const row = box.closest("tr");
+const isFixedRow = row && row\.innerText.includes("🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)");
 
-    if (!isFixedRow && id) {
-      deletePromises.push(tableRef.doc(id).delete());
-    }
-  });
+```
+if (!isFixedRow && id) {
+  deletePromises.push(tableRef.doc(id).delete());
+}
+```
 
-  Promise.all(deletePromises).then(() => {
-    loadTable();
-  });
+});
+
+Promise.all(deletePromises).then(() => {
+loadTable();
+});
 }
 
-
-    // 페이지 로딩 시 로그인 상태 확인
-    document.addEventListener("DOMContentLoaded", checkLogin);
+```
+// 페이지 로딩 시 로그인 상태 확인
+document.addEventListener("DOMContentLoaded", checkLogin);
+```
 
 document.addEventListener("DOMContentLoaded", function () {
-  const refreshButton = document.getElementById("refreshButton");
-  if (refreshButton) {
-    refreshButton.addEventListener("click", function () {
-      window.location.reload(); // 수동 새로고침
-    });
-  }
+const refreshButton = document.getElementById("refreshButton");
+if (refreshButton) {
+refreshButton.addEventListener("click", function () {
+window\.location.reload(); // 수동 새로고침
+});
+}
 
-  // ✅ 접속 직후부터 1분 간격 자동 새로고침
-  setInterval(function () {
-    window.location.reload();
-  }, 60000); // 60000ms = 1분
+// ✅ 접속 직후부터 1분 간격 자동 새로고침
+setInterval(function () {
+window\.location.reload();
+}, 60000); // 60000ms = 1분
 });
 
   </script>
   <style>
 
-    h1 {
-      text-align: center;
-    }
-
-    .button-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      margin: 5px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .send,
-    .stop,
-    .add,
-    .delete,
-    .save,
-    .refresh,
-    .logout {
-      background-color: #2196F3;
-      color: white;
-    }
-
-    .send {
-      background-color: #FF9800;
-    }
-
-    .stop {
-      background-color: #f44336;
-    }
-
-    .add,
-    .delete,
-    .save {
-      background-color: #4CAF50;
-    }
-
-    .exclude-btn.active {
-      background-color: #f44336;
-      color: white;
-    }
-
-    .exclude-btn {
-      background-color: #2196F3;
-      color: white;
-    }
-
-    /* 모든 테이블 버튼 크기 축소 */
-#logTable td button {
-  padding: 6px 12px;
-  font-size: 1rem;
-  line-height: 1.4;
-  min-width: 0;          /* 최소 너비 제한 해제 */
+```
+h1 {
+  text-align: center;
 }
 
-    /* ‘내용’ 입력 칼럼(테이블 7번째 칼럼) 글자 크게 */
-#logTable td:nth-child(7),
-#logTable th:nth-child(7) {
-  font-size: 1.2rem;    /* 원하시는 크기로 조정하세요 */
-  line-height: 1.4;     /* 필요시 줄간격도 조절 */
+.button-container {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-    .logout {
-      background-color: #9C27B0;
-    }
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-    .login-container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
+.send,
+.stop,
+.add,
+.delete,
+.save,
+.refresh,
+.logout {
+  background-color: #2196F3;
+  color: white;
+}
 
-    .login-container input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
+.send {
+  background-color: #FF9800;
+}
 
-    .login-container button {
-      width: 100%;
-      padding: 12px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+.stop {
+  background-color: #f44336;
+}
 
-    .login-container button:hover {
-      background-color: #1976D2;
-    }
+.add,
+.delete,
+.save {
+  background-color: #4CAF50;
+}
 
-    .error-message {
-      color: red;
-      margin-top: 10px;
-    }
+.exclude-btn.active {
+  background-color: #f44336;
+  color: white;
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
+.exclude-btn {
+  background-color: #2196F3;
+  color: white;
+}
 
-    th,
-    td {
-      border: 1px solid #ccc;
-      padding: 12px;
-      text-align: center;
-    }
+/* 모든 테이블 버튼 크기 축소 */
+```
 
-    thead th {
-      background-color: #f2f2f2;
-      font-weight: bold;
-    }
+\#logTable td button {
+padding: 6px 12px;
+font-size: 1rem;
+line-height: 1.4;
+min-width: 0;          /\* 최소 너비 제한 해제 \*/
+}
+
+```
+/* ‘내용’ 입력 칼럼(테이블 7번째 칼럼) 글자 크게 */
+```
+
+\#logTable td\:nth-child(7),
+\#logTable th\:nth-child(7) {
+font-size: 1.2rem;    /\* 원하시는 크기로 조정하세요 */
+line-height: 1.4;     /* 필요시 줄간격도 조절 \*/
+}
+
+```
+.logout {
+  background-color: #9C27B0;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.login-container input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.login-container button:hover {
+  background-color: #1976D2;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 12px;
+  text-align: center;
+}
+
+thead th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
 
 
-    td[contenteditable] {
-      border: 1px solid #ccc;
-    }
+td[contenteditable] {
+  border: 1px solid #ccc;
+}
 
-    .receiver-row {
-      text-align: center;
-      font-weight: bold;
-      background-color: #f2f2f2;
-    }
+.receiver-row {
+  text-align: center;
+  font-weight: bold;
+  background-color: #f2f2f2;
+}
+```
+
   </style>
  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -754,8 +782,6 @@ document.addEventListener("DOMContentLoaded", function () {
     margin-right: 4px;
   }
 </style>
-
-	
 
   <style>
 
@@ -914,68 +940,36 @@ document.addEventListener("DOMContentLoaded", function () {
   </style>
 
   <div id="dateCounts" style="margin-top: 20px;"></div>
-  
+
   <!-- 실시간 서비스 페이지 -->
-	
-<span id="currentUser" style="
-  background: #e0f7fa;
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-weight: bold;
-  font-size: 18px;
-  color: #00796b;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-">
-  사용자명
-</span>
 
-<button onclick="logout()" style="
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  border: none;
-  background-color: #d32f2f;
-  color: white;
-  border-radius: 25px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: background-color 0.2s ease;
-">
-  로그아웃
-</button>
-
-	  
+  <div id="service-container" style="display: none;">
     <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
-	  	  
+
+```
+  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
+ <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
+  <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
+</div>
+  
+  
+```
+
 <div style="
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 40px 30px;
-  background: linear-gradient(to bottom right, #fff0f5, #ffe6ea);
-  border: 3px solid #ff99b8;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(255, 105, 135, 0.3);
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 30px 20px;
+  background: linear-gradient(to bottom right, #fff5f7, #ffeef1);
+  border: 2px solid #ffb6c1;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(255, 182, 193, 0.3);
   text-align: center;
-  font-size: 18px;
 ">
 
-  <h2 style="margin-bottom: 25px; font-size: 24px; color: #e91e63;">📋 내용 등록</h2>
-
-  <input id="inputContent" type="text" placeholder="내용 입력" style="
-    width: 100%;
-    padding: 16px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 18px;
-  " />
-
-  <select id="inputSender" style="
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    font-size: 18px;
-  ">
+```
+  <h2 style="margin-bottom: 20px;">내용 등록</h2>
+  <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;" />
+  <select id="inputSender" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
     <option value="SBS">SBS</option>
     <option value="KBS">KBS</option>
     <option value="MBC">MBC</option>
@@ -985,35 +979,21 @@ document.addEventListener("DOMContentLoaded", function () {
     <option value="LGU+">LGU+</option>
   </select>
 
-  <div style="margin-bottom: 20px;">
-    <p style="margin-bottom: 8px; font-weight: bold;">📺 제외할 수신사 선택</p>
-    <label style="margin-right: 10px;"><input type="checkbox" value="KBS" /> KBS</label>
-    <label style="margin-right: 10px;"><input type="checkbox" value="MBC" /> MBC</label>
-    <label style="margin-right: 10px;"><input type="checkbox" value="SBS" /> SBS</label>
-    <label style="margin-right: 10px;"><input type="checkbox" value="MBN" /> MBN</label>
-    <label style="margin-right: 10px;"><input type="checkbox" value="YTN" /> YTN</label>
+  <div style="margin-bottom: 15px;">
+    <p style="margin-bottom: 6px;">이 내용에서 제외할 수신사 선택</p>
+    <label><input type="checkbox" value="KBS" /> KBS</label>
+    <label><input type="checkbox" value="MBC" /> MBC</label>
+    <label><input type="checkbox" value="SBS" /> SBS</label>
+    <label><input type="checkbox" value="MBN" /> MBN</label>
+    <label><input type="checkbox" value="YTN" /> YTN</label>
     <label><input type="checkbox" value="OBS" /> OBS</label>
   </div>
 
-  <button onclick="registerContent()" style="
-    width: 100%;
-    padding: 16px;
-    font-size: 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-  ">
-    ✅ 등록하기
-  </button>
+  <button onclick="registerContent()" style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; font-weight: bold;">등록</button>
 </div>
-
+```
 
   <!--  <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> 로그인한 사용자 표시 -->
-
 
   <div class="button-container header-fixed">
     <!--  <button class="add" onclick="addRow()">➕ 행 추가</button> -->
@@ -1022,12 +1002,12 @@ document.addEventListener("DOMContentLoaded", function () {
     <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
     </div>
 
-
-	  
-    <audio id="alarmSound" loop>
-      <source src="{{ url_for('static', filename='alarm.mp3') }}" type="audio/mpeg">
-      브라우저가 오디오를 지원하지 않습니다.
-    </audio>
+```
+<audio id="alarmSound" loop>
+  <source src="{{ url_for('static', filename='alarm.mp3') }}" type="audio/mpeg">
+  브라우저가 오디오를 지원하지 않습니다.
+</audio>
+```
 
 <div class="table-wrapper">
     <table id="logTable">
@@ -1051,9 +1031,12 @@ document.addEventListener("DOMContentLoaded", function () {
 <th><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
 </tr>
 
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+```
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+```
+
 </div>
     <div class="footer-button-container">
     <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔 가청 요청</button>
@@ -1098,6 +1081,7 @@ document.addEventListener("DOMContentLoaded", function () {
   </style>
 
 <!-- ✅ 새롭게 닫힌 후 여기에 스타일 추가 -->
+
 <style>
 .logo-kbs {
   font-weight: bold;
@@ -1131,7 +1115,7 @@ document.addEventListener("DOMContentLoaded", function () {
   color: #4caf50;
 }
 </style>
-	
+
 <style>
 .logo-img {
   width: 60px;
@@ -1142,7 +1126,9 @@ document.addEventListener("DOMContentLoaded", function () {
   background-color: #f0f0f0; /* 이미지 깨졌을 때 배경 처리 */
 }
 </style>
+
 <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 
 </html>
