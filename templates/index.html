@@ -70,35 +70,23 @@ function deleteAllhides() {
 }
 
 function toggleAlarm() {
-  const btn = document.getElementById("alarmToggleButton");
+  const isMuted = localStorage.getItem("alarmMuted") === "true";
 
   if (isAlarmActive) {
-    // 알람 정지 (클라이언트 측)
+    // 👉 알람이 울리고 있는 상태일 때: 개인 음소거 (다른 계정엔 영향 없음)
     localStorage.setItem("alarmMuted", "true");
     const alarm = document.getElementById("alarmSound");
     alarm.pause();
     alarm.currentTime = 0;
-    isAlarmActive = false;
-    btn.innerText = "🔔자료송출 알림";
-    btn.classList.remove("stop");
-    btn.classList.add("send");
+    console.log("🔇 알람 음소거 (개인)");
   } else {
-    // 알람 시작
+    // 👉 알람이 꺼져 있을 때: 서버에 알람 상태 ON 요청
     localStorage.removeItem("alarmMuted");
-
-    // ⬇️ 사용자 인터랙션 내에서 play 호출
-    const alarm = document.getElementById("alarmSound");
-    alarm.play().catch(err => {
-      console.warn("브라우저가 자동 재생을 차단했습니다:", err);
-    });
-
-    sendAlarm();
-    isAlarmActive = true;
-    btn.innerText = "⏹가청알림 중단";
-    btn.classList.remove("send");
-    btn.classList.add("stop");
+    sendAlarm(); // Firestore → isAlarmActive: true
+    console.log("🔔 전체 알람 시작 요청");
   }
 }
+
 
 
 
@@ -289,16 +277,23 @@ function listenToAlarmStatus() {
     const alarmStatus = doc.data();
     const btn = document.getElementById("alarmToggleButton");
     const isMuted = localStorage.getItem("alarmMuted") === "true";
+    const alarm = document.getElementById("alarmSound");
 
-    if (alarmStatus && alarmStatus.isAlarmActive && !isMuted) {
-      document.getElementById("alarmSound").play();
+    if (alarmStatus && alarmStatus.isAlarmActive) {
+      // 알람 울리기 (단, 음소거 상태면 재생하지 않음)
+      if (!isMuted) {
+        alarm.play().catch(err => {
+          console.warn("오디오 재생 실패:", err);
+        });
+      }
       isAlarmActive = true;
       btn.innerText = "⏹가청알림 중단";
       btn.classList.remove("send");
       btn.classList.add("stop");
     } else {
-      document.getElementById("alarmSound").pause();
-      document.getElementById("alarmSound").currentTime = 0;
+      // 알람 끄기 (무조건 멈춤)
+      alarm.pause();
+      alarm.currentTime = 0;
       isAlarmActive = false;
       btn.innerText = "🔔자료송출 알림";
       btn.classList.remove("stop");
@@ -306,6 +301,7 @@ function listenToAlarmStatus() {
     }
   });
 }
+
 
 
 
