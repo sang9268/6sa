@@ -179,7 +179,6 @@ function openAllRows() {
           tbody.appendChild(tr);
         });
       });
-	document.getElementById("viewStatus").innerText = "📋 현재 보기: 전체 행 보기";
 
   }
 
@@ -411,7 +410,6 @@ ${receivers.map(rcv => `
 		`;
     		tbody.appendChild(fixedRow);
       });
-	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
     }
 
 		  function toggleView() {
@@ -421,13 +419,11 @@ ${receivers.map(rcv => `
 	    // 기본 보기로 전환
 	    loadTable();
 	    btn.innerText = "📋 기본 보기";
-	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
 	    isShowingAll = false;
 	  } else {
 	    // 전체 보기로 전환
 	    openAllRows();
 	    btn.innerText = "📄 전체 보기";
-	    document.getElementById("viewStatus").innerText = "📋 현재 보기: 전체 보기";
 	    isShowingAll = true;
 	  }
 	}
@@ -930,7 +926,6 @@ function deleteRow() {
     <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
     </div>
 
-<p id="viewStatus" style="text-align:center; font-weight:bold; margin-top: 10px;">📄 현재 보기: 기본 보기</p>
 
 	  
     <audio id="alarmSound" loop>
