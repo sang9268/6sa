@@ -22,13 +22,17 @@
     const tableRef = db.collection("logTable");
     const alarmRef = db.collection("system").doc("alarmStatus"); // Firestore에서 알람 상태를 관리
 
+	let isShowingAll = false; // false = 기본 보기
+	let isAlarmActive = false; // 기본값: 정지 상태
+
+
     // 로그인 상태 확인 함수
     function checkLogin() {
       const currentUser = localStorage.getItem("username");
       if (currentUser) {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("service-container").style.display = "block";
-        document.getElementById("currentUser").innerText = `${currentUser} 님, 환영합니다! 이 페이지는 엘지유플러스에서 관리중입니다. 문의 : 02-2089-0610`;  // 로그인한 계정 표시
+        document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
         loadTable();
         listenToAlarmStatus(); // 알람 상태 리스너 시작
       } else {
@@ -62,6 +66,25 @@ function deleteAllhides() {
       });
     });
 }
+
+function toggleAlarm() {
+  const btn = document.getElementById("alarmToggleButton");
+
+  if (isAlarmActive) {
+    stopAlarm();
+    btn.innerText = "🔔 가청 요청";
+    btn.classList.remove("stop");
+    btn.classList.add("send");
+    isAlarmActive = false;
+  } else {
+    sendAlarm();
+    btn.innerText = "⏹ 가청 정지";
+    btn.classList.remove("send");
+    btn.classList.add("stop");
+    isAlarmActive = true;
+  }
+}
+
 
 function toggleBroadcastStatus(button) {
   const tr = button.closest("tr");
@@ -243,17 +266,35 @@ function onContentChange(id, text) {
 
     
     // 알람 상태 리스너
-    function listenToAlarmStatus() {
-      alarmRef.onSnapshot(doc => {
-        const alarmStatus = doc.data();
-        if (alarmStatus && alarmStatus.isAlarmActive) {
-          document.getElementById("alarmSound").play(); // 알람 울리기
-        } else {
-          document.getElementById("alarmSound").pause(); // 알람 정지
-          document.getElementById("alarmSound").currentTime = 0;
-        }
-      });
-    }
+	function listenToAlarmStatus() {
+	  alarmRef.onSnapshot(doc => {
+	    const alarmStatus = doc.data();
+	    const btn = document.getElementById("alarmToggleButton");
+	
+	    if (alarmStatus && alarmStatus.isAlarmActive) {
+	      document.getElementById("alarmSound").play();
+	      isAlarmActive = true;
+	
+	      if (btn) {
+	        btn.innerText = "⏹ 가청 정지";
+	        btn.classList.remove("send");
+	        btn.classList.add("stop");
+	      }
+	
+	    } else {
+	      document.getElementById("alarmSound").pause();
+	      document.getElementById("alarmSound").currentTime = 0;
+	      isAlarmActive = false;
+	
+	      if (btn) {
+	        btn.innerText = "🔔 가청 요청";
+	        btn.classList.remove("stop");
+	        btn.classList.add("send");
+	      }
+	    }
+	  });
+	}
+
 
     // 알람 시작 함수
     function sendAlarm() {
@@ -373,6 +414,24 @@ ${receivers.map(rcv => `
 	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
     }
 
+		  function toggleView() {
+	  const btn = document.getElementById("toggleViewButton");
+	
+	  if (isShowingAll) {
+	    // 기본 보기로 전환
+	    loadTable();
+	    btn.innerText = "📋 기본 보기";
+	    document.getElementById("viewStatus").innerText = "📄 현재 보기: 기본 보기";
+	    isShowingAll = false;
+	  } else {
+	    // 전체 보기로 전환
+	    openAllRows();
+	    btn.innerText = "📄 전체 보기";
+	    document.getElementById("viewStatus").innerText = "📋 현재 보기: 전체 보기";
+	    isShowingAll = true;
+	  }
+	}
+
     // 셀 업데이트 함수
     function updateCell(id, field, value) {
       tableRef.doc(id).update({[field]: value}).then(() => loadTable());
@@ -442,6 +501,40 @@ ${receivers.map(rcv => `
       alert("저장되었습니다!");
     }
 
+	  function registerContent() {
+  const content = document.getElementById("inputContent").value.trim();
+  const sender = document.getElementById("inputSender").value;
+  const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+
+  if (!content || !sender) {
+    alert("내용과 송출사를 입력하세요.");
+    return;
+  }
+
+  const rowData = {
+    date: '', time: '', content: content, sender: sender,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    hidden: false,
+    broadcastStatus: "송출전"
+  };
+
+  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
+  receivers.forEach(rcv => {
+    rowData[rcv] = {
+      ack: "확인!",
+      exclude: [...checkboxes].some(cb => cb.value === rcv) ? "미수신" : "수신"
+    };
+  });
+
+  tableRef.add(rowData).then(() => {
+    alert("등록되었습니다.");
+    loadTable();
+    document.getElementById("inputContent").value = "";
+  });
+}
+
+	  
+	  
 
     // 행 숨기기 함수
 function deleteRow() {
@@ -798,6 +891,32 @@ function deleteRow() {
   <!-- 실시간 서비스 페이지 -->
   <div id="service-container" style="display: none;">
     <h1 class="header-fixed">📡 6사보도 실시간 서비스</h1>
+		  <div style="max-width: 400px; margin: 0 auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center;">
+	  <h2 style="margin-bottom: 20px;">내용 등록</h2>
+	  <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;" />
+	  <select id="inputSender" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
+	    <option value="SBS">SBS</option>
+	    <option value="KBS">KBS</option>
+	    <option value="MBC">MBC</option>
+	    <option value="MBN">MBN</option>
+	    <option value="YTN">YTN</option>
+	    <option value="OBS">OBS</option>
+	    <option value="LGU+">LGU+</option>
+	  </select>
+	
+	  <div style="margin-bottom: 15px;">
+	    <p style="margin-bottom: 6px;">이 내용에서 제외할 수신사 선택</p>
+	    <label><input type="checkbox" value="KBS" /> KBS</label>
+	    <label><input type="checkbox" value="MBC" /> MBC</label>
+	    <label><input type="checkbox" value="SBS" /> SBS</label>
+	    <label><input type="checkbox" value="MBN" /> MBN</label>
+	    <label><input type="checkbox" value="YTN" /> YTN</label>
+	    <label><input type="checkbox" value="OBS" /> OBS</label>
+	  </div>
+	
+	  <button onclick="registerContent()" style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 6px; font-weight: bold;">등록</button>
+	</div>
+
   <!--  <p id="currentUser" style="font-size: 18px; color: #333;">로그인된 사용자: </p> 로그인한 사용자 표시 -->
 	  <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px;">
   <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
@@ -805,14 +924,10 @@ function deleteRow() {
 </div>
 
   <div class="button-container header-fixed">
-      <button class="send" onclick="sendAlarm()">🔔 가청(요청)</button>
-      <button class="stop" onclick="stopAlarm()">⏹ 가청정지(확인)</button>
     <!--  <button class="add" onclick="addRow()">➕ 행 추가</button> -->
       <button class="delete" onclick="deleteRow()">🗑 행 삭제</button>
     <!--      <button class="save" onclick="saveData()">💾 저장</button> -->
-      <button id="refreshButton" class="refresh">🔃 새로고침</button>
     <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
-      <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
     </div>
 
 <p id="viewStatus" style="text-align:center; font-weight:bold; margin-top: 10px;">📄 현재 보기: 기본 보기</p>
@@ -850,10 +965,11 @@ function deleteRow() {
     </table>
 </div>
     <div class="footer-button-container">
-    <button onclick="loadTable()">📄 기본 보기</button>
-    <button onclick="openAllRows()">📋 전체 행 보기</button>
-    <button onclick="openAllView()">📊 이력 보기</button>
-    <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 행 숨김</button>
+    <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔 가청 요청</button>
+    <button id="refreshButton" class="refresh">🔃 새로고침</button>
+    <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button>
+    <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
+    <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 숨김</button>
     <!-- <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button> -->
     </div>
   <div class="footer-comment">
