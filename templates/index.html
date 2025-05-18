@@ -35,6 +35,8 @@
         document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
         loadTable();
         listenToAlarmStatus(); // 알람 상태 리스너 시작
+	const senderSelect = document.getElementById("inputSender");
+        if (senderSelect) senderSelect.value = currentUser.toUpperCase();  // 선택 기본값 설정
       } else {
         document.getElementById("login-container").style.display = "block";
         document.getElementById("service-container").style.display = "none";
@@ -53,7 +55,7 @@ function deleteAllhides() {
         const data = docs[i].data();
         
         // 고정 행 내용과 같은 경우 제외
-        if (data.content === "🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+        if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
           continue; // 고정 행은 숨기지 않음
         }
 
@@ -126,7 +128,7 @@ function deleteAllRows() {
       const data = doc.data();
 
       // ✅ 고정행은 삭제하지 않음
-      if (data.content === "🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
+      if (data.content === "🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)") {
         return; // 삭제 제외
       }
 
@@ -169,7 +171,6 @@ function openAllRows() {
           tr.setAttribute("data-row-id", rowId);
           tr.innerHTML = `
             <td>${total - index}</td>
-	    <td><input type="checkbox" data-id="${rowId}" /></td>
             <td>${data.date || ''}</td>
             <td>${data.time || ''}</td>
             <td>${data.content || ''}</td>
@@ -359,7 +360,6 @@ function onContentChange(id, text) {
 
           tr.innerHTML = `
   	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
-	    <td><input type="checkbox" data-id="${rowId}" /></td>
 	<!--    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td> -->
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
@@ -379,13 +379,10 @@ ${receivers.map(rcv => `
       ${(data[rcv] && data[rcv].ack) || '확인!'}
     </button>
   </td>
-  <td>
-    <button onclick="toggleExclude(this, '${doc.id}', '${rcv}')" 
-            class="${(data[rcv] && data[rcv].exclude === '미수신') ? 'exclude-btn active' : 'exclude-btn'}">
-      ${(data[rcv] && data[rcv].exclude) || '수신'}
-    </button>
-  </td>
 `).join('')}
+  <td>
+    <button onclick="deleteRowById('${doc.id}')">삭제</button>
+  </td>
 
           `;
           tbody.appendChild(tr);
@@ -408,8 +405,8 @@ ${receivers.map(rcv => `
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
     		  <td>LGU+</td>
-		  <td>🛠 이곳에 내용을 입력하시면 날짜와 시간은 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td colspan="12" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
+		  <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
+		  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
  		  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
 		`;
     		tbody.appendChild(fixedRow);
@@ -450,34 +447,6 @@ ${receivers.map(rcv => `
       });
     }
 
-    // 제외 상태 토글 (해당 계정에만 적용)
-    function toggleExclude(btn, id, rcv) {
-      const currentUser = localStorage.getItem("username");
-      const cellRef = tableRef.doc(id);
-
-      // Firestore에서 해당 행의 데이터를 가져옴
-      cellRef.get().then(doc => {
-        const data = doc.data();
-
-        // 현재 상태 가져오기
-        const current = (data[rcv] && data[rcv].exclude) || '수신';
-
-        // 새로운 제외 상태
-        const updated = current === '수신' ? '미수신' : '수신';
-
-        // 제외 상태를 Firestore에 업데이트 (현재 계정에 대해서만)
-        cellRef.update({
-          [`${rcv}.exclude`]: updated,
-          [`${rcv}.ack`]: '확인!'  // 확인 상태 초기화
-        }).then(() => {
-          // 즉시 반영
-          loadTable();
-
-          // 버튼 색 변경: 빨간색으로 표시
-          btn.classList.toggle('active');
-        });
-      });
-    }
 
     // 행 추가 함수
     function addRow() {
@@ -554,7 +523,7 @@ function deleteRow() {
   checkedBoxes.forEach(box => {
     const id = box.getAttribute("data-id");
     const row = box.closest("tr");
-    const isFixedRow = row && row.innerText.includes("🛠 이곳에 내용을 입력하시면");
+    const isFixedRow = row && row.innerText.includes("🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)");
 
     if (!isFixedRow && id) {
       deletePromises.push(tableRef.doc(id).delete());
@@ -996,22 +965,21 @@ function deleteRow() {
       <thead>
         <tr>
 	  <th rowspan="2">번호</th>
-          <th rowspan="2">✔</th>
 	<!--  <th rowspan="2">송출구분</th>   ✅ 여기 추가 -->
           <th rowspan="2">날짜</th>
           <th rowspan="2">올린시간</th>
 	  <th rowspan="2">송출사</th>
           <th rowspan="2">내용</th>
-          <th colspan="12">수신사</th>
+          <th colspan="6">수신사</th>
 	  <th rowspan="2">상태/관리</th>
         </tr>
 <tr>
-<th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
-<th colspan="2"><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
-<th colspan="2"><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
-<th colspan="2"><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
-<th colspan="2"><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
-<th colspan="2"><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
+<th><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
+<th><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
+<th><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
+<th><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
+<th><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
+<th><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
 </tr>
 
       </thead>
@@ -1021,7 +989,7 @@ function deleteRow() {
     <div class="footer-button-container">
     <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔 가청 요청</button>
     <button id="refreshButton" class="refresh">🔃 새로고침</button>
-    <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button>
+  <!--  <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button> -->
     <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
     <button class="deleteAll" onclick="deleteAllhides()">🗑 전체 숨김</button>
     <!-- <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button> -->
