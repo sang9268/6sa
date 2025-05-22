@@ -69,6 +69,18 @@ function deleteAllhides() {
     });
 }
 
+let audioCtx;
+let oscillator;
+let gainNode;
+let alarmInterval;
+
+function initializeAudioContext() {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+
 // 🔔 알람 버튼 클릭 시 전체 알림 활성화 (모든 계정에 적용)
 function toggleAlarm() {
   const username = localStorage.getItem("username");
@@ -79,30 +91,38 @@ function toggleAlarm() {
   alert("📢 전체 사용자에게 자료송출 알림을 전송했습니다.");
 }
 
-// Web Audio API를 사용한 비프음 함수 추가
-function playBeep() {
- const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+function playSoftTone() {
+  if (!audioCtx) return;
 
-  // 사인파로 부드러운 음색
+  oscillator = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+
   oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4, 440Hz
+  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // 부드러운 A음
 
-  // ADSR: Attack-Decay-Sustain-Release
-  const now = audioCtx.currentTime;
-  gainNode.gain.setValueAtTime(0, now); // 시작은 무음
-  gainNode.gain.linearRampToValueAtTime(0.2, now + 0.2); // 천천히 증가 (Attack)
-  gainNode.gain.linearRampToValueAtTime(0.1, now + 0.4); // 감쇠 (Decay)
-  gainNode.gain.setValueAtTime(0.1, now + 0.5);          // 유지 (Sustain)
-  gainNode.gain.linearRampToValueAtTime(0, now + 1.0);   // 서서히 사라짐 (Release)
+  gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); // 볼륨 설정
 
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
 
   oscillator.start();
-  oscillator.stop(now + 1.0); // 1초 동안 재생
+  oscillator.stop(audioCtx.currentTime + 1.0); // 1초 재생
 }
+
+function playLoopingBeep() {
+  stopLoopingBeep(); // 중복 방지
+  alarmInterval = setInterval(playSoftTone, 1500); // 1.5초 간격 반복
+}
+
+function stopLoopingBeep() {
+  clearInterval(alarmInterval);
+  if (oscillator) {
+    try { oscillator.stop(); } catch (e) {}
+    oscillator.disconnect();
+  }
+  if (gainNode) gainNode.disconnect();
+}
+
 
 	  
 
@@ -114,24 +134,16 @@ function listenToAlarmStatus() {
 
 if (alarmStatus && alarmStatus.isAlarmActive) {
   if (!acknowledged) {
-    playLoopingBeep();  // 반복 비프 시작
-    showAlarmPopup();
+        initializeAudioContext();    // 오디오 초기화
+        playLoopingBeep();           // 부드러운 알람 시작
+        showAlarmPopup();           // 팝업 표시
   }
 } else {
-  stopLoopingBeep(); // 정지
-  hideAlarmPopup();
-  localStorage.removeItem(`alarmAcknowledged_${username}`);
+      stopLoopingBeep();            // 전체 알람 중단
+      hideAlarmPopup();            
+      localStorage.removeItem(`alarmAcknowledged_${username}`);
 }
   });
-}
-
-let alarmInterval;
-function playLoopingBeep() {
-  alarmInterval = setInterval(playBeep, 1500); // 1.5초 간격 반복
-}
-
-function stopLoopingBeep() {
-  clearInterval(alarmInterval);
 }
 
 function toggleBroadcastStatus(button) {
@@ -326,7 +338,13 @@ function acknowledgeAlarm() {
 
   localStorage.setItem(`alarmAcknowledged_${username}`, "true");
   hideAlarmPopup();
+  stopLoopingBeep();
+
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume(); // 다음 알람 위해 재활성화
+  }
 }
+
 
 	  
 
@@ -1031,6 +1049,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>
     <div class="footer-button-container">
     <button id="alarmToggleButton" class="send" onclick="toggleAlarm()">🔔자료송출 알림</button>
+    <button onclick="stopAlarm()" class="stop">🛑 전체 알람 정지</button>
   <!--  <button id="refreshButton" class="refresh">🔃웹페이지 새로고침</button> -->
     <button onclick="openAllView()">🧾송출 이력 보기</button>
   <!--  <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button> -->
