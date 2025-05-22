@@ -81,19 +81,27 @@ function toggleAlarm() {
 
 // Web Audio API를 사용한 비프음 함수 추가
 function playBeep() {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
 
-  oscillator.type = 'square'; // 사각파로 알림 느낌
-  oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Hz
-  gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // 볼륨
+  // 사인파로 부드러운 음색
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4, 440Hz
+
+  // ADSR: Attack-Decay-Sustain-Release
+  const now = audioCtx.currentTime;
+  gainNode.gain.setValueAtTime(0, now); // 시작은 무음
+  gainNode.gain.linearRampToValueAtTime(0.2, now + 0.2); // 천천히 증가 (Attack)
+  gainNode.gain.linearRampToValueAtTime(0.1, now + 0.4); // 감쇠 (Decay)
+  gainNode.gain.setValueAtTime(0.1, now + 0.5);          // 유지 (Sustain)
+  gainNode.gain.linearRampToValueAtTime(0, now + 1.0);   // 서서히 사라짐 (Release)
 
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
-  
+
   oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.4); // 0.4초 재생
+  oscillator.stop(now + 1.0); // 1초 동안 재생
 }
 
 	  
