@@ -263,23 +263,26 @@ function downloadAsExcel() {
 
 
     // 로그인 함수
-	function login() {
-	  const username = document.getElementById("username").value.trim().toLowerCase();
-	  const password = document.getElementById("password").value;
-	  const fakeEmail = `${username}@sabodo.com`;
-	
-	  firebase.auth().signInWithEmailAndPassword(fakeEmail, password)
-	    .then(userCredential => {
-	      // ✅ 로그인 성공
-	      localStorage.setItem("username", username);
-	      checkLogin();  // 서비스 화면 진입
-	    })
-	    .catch(error => {
-	      // ❌ 로그인 실패 (회원가입은 시도하지 않음)
-	      console.error("로그인 실패:", error.message);
-	      document.getElementById("error-message").innerText = "아이디나 비밀번호가 틀렸습니다.";
-	    });
-	}
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const validUsers = {
+        "lgu+": "lgu+",
+        "kbs": "kbs",
+        "mbc": "mbc",
+        "sbs": "sbs",
+        "ytn": "ytn",
+        "mbn": "mbn",
+        "obs": "obs"
+      };
+
+      if (validUsers[username] && validUsers[username] === password) {
+        localStorage.setItem("username", username);
+        checkLogin();
+      } else {
+        document.getElementById("error-message").innerText = "아이디나 비밀번호가 틀렸습니다.";
+      }
+    }
 
 
     // 로그아웃 함수
@@ -411,7 +414,7 @@ function acknowledgeAlarm() {
             <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
 		<td>
   		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
-   		 ${["선택","lgu", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
+   		 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
    		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
   		  `).join('')}
  		 </select>
@@ -449,7 +452,7 @@ ${receivers.map(rcv => `
 		  <td>고정</td>
 		  <td>2025-xx-xx</td>
 		  <td>00:00:00</td>
-    		  <td>lgu</td>
+    		  <td>LGU+</td>
 		  <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
 		  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
  		  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
@@ -991,7 +994,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	    <option value="MBN">MBN</option>
 	    <option value="YTN">YTN</option>
 	    <option value="OBS">OBS</option>
-	    <option value="lgu">lgu</option>
+	    <option value="LGU+">LGU+</option>
 	  </select>
 	
 	  <div style="margin-bottom: 15px;">
