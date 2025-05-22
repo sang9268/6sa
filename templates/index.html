@@ -580,6 +580,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+	setInterval(() => {
+	  const username = localStorage.getItem("username");
+	  if (!username) return;
+	
+	  const acknowledged = localStorage.getItem(`alarmAcknowledged_${username}`) === "true";
+	
+	  alarmRef.get().then(doc => {
+	    const data = doc.data();
+	    if (data && data.isAlarmActive && !acknowledged) {
+	      document.getElementById("alarmSound").play().catch(() => {});
+	      showAlarmPopup();
+	    }
+	  });
+	}, 2000);
+
   // ✅ 접속 직후부터 1분 간격 자동 새로고침
   setInterval(function () {
     window.location.reload();
