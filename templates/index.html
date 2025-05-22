@@ -71,39 +71,35 @@ function deleteAllhides() {
 
 // 🔔 알람 버튼 클릭 시 전체 알림 활성화 (모든 계정에 적용)
 function toggleAlarm() {
-  const isMuted = localStorage.getItem("alarmMuted") === "true";
+  const username = localStorage.getItem("username");
+  if (!username) return;
 
-  if (isAlarmActive) {
-    // ⏹ 정지 버튼 클릭 시: 이 브라우저만 알림음 꺼짐
-    localStorage.setItem("alarmMuted", "true");
-    console.log("🔇 이 브라우저에서만 알림 중지");
-    document.getElementById("alarmSound").pause();
-    document.getElementById("alarmSound").currentTime = 0;
-    isAlarmActive = false; // ← 이 줄 추가
-    updateAlarmButtonUI(true); // 버튼 UI만 조정
-  } else {
-    // 🔔 자료송출 알림 클릭 시: 전체 알람 울림
-    localStorage.removeItem("alarmMuted"); // 이 브라우저도 다시 재생 가능하게
-    sendAlarm(); // Firestore에 전체 알림 요청
-  }
+  localStorage.removeItem(`alarmAcknowledged_${username}`); // 알림 초기화
+  sendAlarm(); // Firestore의 전체 알람 상태를 true로 설정
+  alert("📢 전체 사용자에게 자료송출 알림을 전송했습니다.");
 }
 
 
+function listenToAlarmStatus() {
+  alarmRef.onSnapshot(doc => {
+    const alarmStatus = doc.data();
+    const alarm = document.getElementById("alarmSound");
+    const username = localStorage.getItem("username");
+    const acknowledged = localStorage.getItem(`alarmAcknowledged_${username}`) === "true";
 
-
-function updateAlarmButtonUI(isStopped) {
-  const btn = document.getElementById("alarmToggleButton");
-  if (isStopped) {
-    btn.innerText = "🔔자료송출 알림";
-    btn.classList.remove("stop");
-    btn.classList.add("send");
-  } else {
-    btn.innerText = "⏹가청알림 중단";
-    btn.classList.remove("send");
-    btn.classList.add("stop");
-  }
+    if (alarmStatus && alarmStatus.isAlarmActive) {
+      if (!acknowledged) {
+        alarm.play().catch(err => console.warn("🔊 재생 오류:", err));
+        showAlarmPopup();
+      }
+    } else {
+      alarm.pause();
+      alarm.currentTime = 0;
+      hideAlarmPopup();
+      localStorage.removeItem(`alarmAcknowledged_${username}`); // 다시 받을 수 있게 초기화
+    }
+  });
 }
-
 
 
 
@@ -285,41 +281,26 @@ function onContentChange(id, text) {
   });
 }
 
-
-    
-    // 알람 상태 리스너
-function listenToAlarmStatus() {
-  alarmRef.onSnapshot(doc => {
-    const alarmStatus = doc.data();
-    const btn = document.getElementById("alarmToggleButton");
-    const isMuted = localStorage.getItem("alarmMuted") === "true";
-    const alarm = document.getElementById("alarmSound");
-
-    if (alarmStatus && alarmStatus.isAlarmActive) {
-      // 알람 울리기 (단, 음소거 상태면 재생하지 않음)
-      if (!isMuted) {
-        alarm.play().catch(err => {
-          console.warn("오디오 재생 실패:", err);
-        });
-      }
-      isAlarmActive = true;
-      btn.innerText = "⏹가청알림 중단";
-      btn.classList.remove("send");
-      btn.classList.add("stop");
-    } else {
-      // 알람 끄기 (무조건 멈춤)
-      alarm.pause();
-      alarm.currentTime = 0;
-      isAlarmActive = false;
-      btn.innerText = "🔔자료송출 알림";
-      btn.classList.remove("stop");
-      btn.classList.add("send");
-    }
-  });
+function showAlarmPopup() {
+  document.getElementById("alarmPopup").style.display = "block";
 }
 
+function hideAlarmPopup() {
+  document.getElementById("alarmPopup").style.display = "none";
+}
 
+function acknowledgeAlarm() {
+  const username = localStorage.getItem("username");
+  if (!username) return;
 
+  localStorage.setItem(`alarmAcknowledged_${username}`, "true");
+  const alarm = document.getElementById("alarmSound");
+  alarm.pause();
+  alarm.currentTime = 0;
+  hideAlarmPopup();
+}
+
+	  
 
     // 알람 시작 함수
     function sendAlarm() {
@@ -1050,7 +1031,26 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 
   </div>
+	
+<div id="alarmPopup" style="
+  display: none;
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+  text-align: center;
+  z-index: 9999;
+">
+  <p style="font-size: 18px; font-weight: bold;">🔔 자료 송출 알림이 발생했습니다!</p>
+  <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
+  <button onclick="acknowledgeAlarm()" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">✅ 확인</button>
+</div>
 
+	
   <style>
 
     #logTable {
