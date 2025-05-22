@@ -69,24 +69,41 @@ function deleteAllhides() {
     });
 }
 
+// 🔔 알람 버튼 클릭 시 전체 알림 활성화 (모든 계정에 적용)
 function toggleAlarm() {
   const isMuted = localStorage.getItem("alarmMuted") === "true";
 
-  // Firestore 상태를 기반으로 토글 (공용 알람 상태 반영)
   if (isAlarmActive) {
-    // 알람 끄기 (모든 사용자에게 반영)
-    stopAlarm(); // alarmRef.set({ isAlarmActive: false })
-    console.log("🔇 전체 알람 중지 요청");
+    // ⏹ 정지 버튼 클릭 시: 이 브라우저만 알림음 꺼짐
+    localStorage.setItem("alarmMuted", "true");
+    console.log("🔇 이 브라우저에서만 알림 중지");
+    document.getElementById("alarmSound").pause();
+    document.getElementById("alarmSound").currentTime = 0;
+    isAlarmActive = false; // ← 이 줄 추가
+    updateAlarmButtonUI(true); // 버튼 UI만 조정
   } else {
-    // 알람 시작 (모든 사용자에게 반영)
-    localStorage.removeItem("alarmMuted"); // 개인 음소거 해제
-    sendAlarm(); // alarmRef.set({ isAlarmActive: true })
-    console.log("🔔 전체 알람 시작 요청");
+    // 🔔 자료송출 알림 클릭 시: 전체 알람 울림
+    localStorage.removeItem("alarmMuted"); // 이 브라우저도 다시 재생 가능하게
+    updateAlarmButtonUI(false);  // UI 즉시 반영
+    sendAlarm(); // Firestore에 전체 알림 요청
   }
 }
 
 
 
+
+function updateAlarmButtonUI(isStopped) {
+  const btn = document.getElementById("alarmToggleButton");
+  if (isStopped) {
+    btn.innerText = "🔔자료송출 알림";
+    btn.classList.remove("stop");
+    btn.classList.add("send");
+  } else {
+    btn.innerText = "⏹가청알림 중단";
+    btn.classList.remove("send");
+    btn.classList.add("stop");
+  }
+}
 
 
 
