@@ -84,7 +84,6 @@ function toggleAlarm() {
   } else {
     // 🔔 자료송출 알림 클릭 시: 전체 알람 울림
     localStorage.removeItem("alarmMuted"); // 이 브라우저도 다시 재생 가능하게
-    updateAlarmButtonUI(false);  // UI 즉시 반영
     sendAlarm(); // Firestore에 전체 알림 요청
   }
 }
