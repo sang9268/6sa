@@ -79,29 +79,52 @@ function toggleAlarm() {
   alert("📢 전체 사용자에게 자료송출 알림을 전송했습니다.");
 }
 
+// Web Audio API를 사용한 비프음 함수 추가
+function playBeep() {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = 'square'; // 사각파로 알림 느낌
+  oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Hz
+  gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // 볼륨
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.4); // 0.4초 재생
+}
+
+	  
 
 function listenToAlarmStatus() {
   alarmRef.onSnapshot(doc => {
     const alarmStatus = doc.data();
-    const alarm = document.getElementById("alarmSound");
     const username = localStorage.getItem("username");
     const acknowledged = localStorage.getItem(`alarmAcknowledged_${username}`) === "true";
 
-    if (alarmStatus && alarmStatus.isAlarmActive) {
-      if (!acknowledged) {
-        alarm.play().catch(err => console.warn("🔊 재생 오류:", err));
-        showAlarmPopup();
-      }
-    } else {
-      alarm.pause();
-      alarm.currentTime = 0;
-      hideAlarmPopup();
-      localStorage.removeItem(`alarmAcknowledged_${username}`); // 다시 받을 수 있게 초기화
-    }
+if (alarmStatus && alarmStatus.isAlarmActive) {
+  if (!acknowledged) {
+    playLoopingBeep();  // 반복 비프 시작
+    showAlarmPopup();
+  }
+} else {
+  stopLoopingBeep(); // 정지
+  hideAlarmPopup();
+  localStorage.removeItem(`alarmAcknowledged_${username}`);
+}
   });
 }
 
+let alarmInterval;
+function playLoopingBeep() {
+  alarmInterval = setInterval(playBeep, 1500); // 1.5초 간격 반복
+}
 
+function stopLoopingBeep() {
+  clearInterval(alarmInterval);
+}
 
 function toggleBroadcastStatus(button) {
   const tr = button.closest("tr");
@@ -294,9 +317,6 @@ function acknowledgeAlarm() {
   if (!username) return;
 
   localStorage.setItem(`alarmAcknowledged_${username}`, "true");
-  const alarm = document.getElementById("alarmSound");
-  alarm.pause();
-  alarm.currentTime = 0;
   hideAlarmPopup();
 }
 
@@ -566,34 +586,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🔊 알람 사전 재생 허용을 위한 무음 플레이
-  const alarm = document.getElementById("alarmSound");
-  if (alarm) {
-    alarm.volume = 0;
-    alarm.play().then(() => {
-      alarm.pause();
-      alarm.currentTime = 0;
-      alarm.volume = 1.0;
-      console.log("🔔 알람 사운드 미리 재생 준비 완료");
-    }).catch((e) => {
-      console.warn("❌ 오디오 미리 재생 실패:", e);
-    });
-  }
-
-	setInterval(() => {
-	  const username = localStorage.getItem("username");
-	  if (!username) return;
-	
-	  const acknowledged = localStorage.getItem(`alarmAcknowledged_${username}`) === "true";
-	
-	  alarmRef.get().then(doc => {
-	    const data = doc.data();
-	    if (data && data.isAlarmActive && !acknowledged) {
-	      document.getElementById("alarmSound").play().catch(() => {});
-	      showAlarmPopup();
-	    }
-	  });
-	}, 2000);
 
   // ✅ 접속 직후부터 1분 간격 자동 새로고침
   setInterval(function () {
@@ -1002,12 +994,6 @@ document.addEventListener("DOMContentLoaded", function () {
     <!--   <button class="logout" onclick="logout()">로그아웃</button> -->
     </div>
 
-
-	  
-    <audio id="alarmSound" loop>
-      <source src="{{ url_for('static', filename='alarm.mp3') }}" type="audio/mpeg">
-      브라우저가 오디오를 지원하지 않습니다.
-    </audio>
 
 <div class="table-wrapper">
     <table id="logTable">
