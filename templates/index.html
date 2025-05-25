@@ -1252,11 +1252,19 @@ document.addEventListener("DOMContentLoaded", function () {
   color: #4caf50;
 }
 </style>
+	
 <style>
-#logTable tbody tr:not(:last-child) {
-  border-left: 3px solid #ddd;
-  border-right: 3px solid #ddd;
-}
+  /* 본문 내용행 + 고정행: 수신사 시작열 왼쪽에 굵은 선 */
+  #logTable th:nth-child(6),
+  #logTable td:nth-child(6) {
+    border-left: 3px solid #000;
+  }
+
+  /* 본문 내용행 + 고정행: 내용열 오른쪽에 굵은 선 */
+  #logTable th:nth-child(5),
+  #logTable td:nth-child(5) {
+    border-right: 3px solid #000;
+  }
 </style>
 
 <style>
