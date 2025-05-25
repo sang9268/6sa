@@ -405,7 +405,7 @@ function onContentChange(id, text) {
 function showAlarmPopup(message) {
   const popup = document.getElementById("alarmPopup");
   const textEl = popup.querySelector(".alarm-text");
-  if (textEl) textEl.innerText = message;
+  if (textEl) textEl.innerHTML = message.replace(/\n/g, "<br>");
   popup.style.display = "block";
 }
 
@@ -665,7 +665,10 @@ function registerContent() {
   });
 
 tableRef.add(rowData).then(() => {
-  const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${content}`;
+	const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!
+	📑 내용: ${content}
+	📤 송출사: ${sender}`;
+
   alarmRef.set({
     isAlarmActive: true,
     alarmMessage: popupMessage,
