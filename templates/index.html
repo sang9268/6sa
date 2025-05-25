@@ -664,11 +664,18 @@ function registerContent() {
   };
   });
 
-  tableRef.add(rowData).then(() => {
-    alert("등록되었습니다.");
+tableRef.add(rowData).then(() => {
+  const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${content}`;
+  alarmRef.set({
+    isAlarmActive: true,
+    alarmMessage: popupMessage,
+    timestamp: Date.now()
+  }).then(() => {
     loadTable();
     document.getElementById("inputContent").value = "";
   });
+});
+
 }
 
 
