@@ -519,8 +519,7 @@ ${receivers.map(rcv => `
 		  <td>00:00:00</td>
     		  <td>LGU+</td>
 		  <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-		  <td colspan="6" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
- 		  <td></td> <!-- 상태/관리 열 빈칸이라도 포함 -->
+		  <td colspan="13" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
       });
@@ -1252,6 +1251,18 @@ document.addEventListener("DOMContentLoaded", function () {
   font-weight: bold;
   color: #4caf50;
 }
+</style>
+
+<style>
+  #logTable td:nth-child(6),
+  #logTable th:nth-child(6) {
+    border-left: 3px solid #000;
+  }
+
+  #logTable td:nth-child(n+6):nth-child(-n+17),
+  #logTable th:nth-child(n+6):nth-child(-n+17) {
+    background-color: #f9f9f9;
+  }
 </style>
 	
 <style>
