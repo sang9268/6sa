@@ -626,9 +626,11 @@ function registerContent() {
 
   const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
   receivers.forEach(rcv => {
+  const isSender = rcv === sender;  // 송출사와 수신사가 같으면 반드시 포함
+  const isExcluded = !isSender && [...checkboxes].some(cb => cb.value === rcv);
     rowData[rcv] = {
       ack: "확인!",
-      exclude: [...checkboxes].some(cb => cb.value === rcv) ? "미수신" : "수신"
+  	exclude: isExcluded ? "미수신" : "수신"
     };
   });
 
