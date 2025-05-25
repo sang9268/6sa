@@ -1254,20 +1254,14 @@ document.addEventListener("DOMContentLoaded", function () {
 </style>
 
 <style>
-/* 본문 테이블에서 수신사 영역 구분선 */
-#logTable td:nth-child(6),
-#logTable th:nth-child(6) {
+/* 수신사 로고 행 - KBS 로고 왼쪽에 굵은 선 */
+#logTable thead tr:nth-child(2) th:nth-child(2) {
   border-left: 3px solid #000;
 }
 
-/* 수신사 영역 배경색 */
-#logTable td:nth-child(n+6):nth-child(-n+17),
-#logTable th:nth-child(n+6):nth-child(-n+17) {
-  background-color: #f9f9f9;
-}
-
-/* 방송사 로고 줄(KBS 시작 열)에 굵은 경계선 */
-#logTable thead tr:nth-child(2) th:nth-child(1) {
+/* 본문 테이블 수신사 영역의 시작(6번째 열)에 굵은 선 */
+#logTable td:nth-child(6),
+#logTable th:nth-child(6) {
   border-left: 3px solid #000;
 }
 </style>
