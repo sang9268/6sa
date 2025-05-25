@@ -1,0 +1,10 @@
+{
+  "kbs": { "password": "kbs", "role": "editor", "enabled": true },
+  "sbs": { "password": "sbs", "role": "editor", "enabled": true },
+  "mbc": { "password": "mbc", "role": "editor", "enabled": true },
+  "mbn": { "password": "mbn", "role": "editor", "enabled": true },
+  "ytn": { "password": "ytn", "role": "editor", "enabled": true },
+  "obs": { "password": "obs", "role": "editor", "enabled": true },
+  "lgu+": { "password": "lgu+", "role": "admin", "enabled": true },
+  "disableduser": { "password": "1234", "role": "editor", "enabled": false }
+}
