@@ -5,30 +5,32 @@
   <title>전체 보기</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
       background-color: #fff8f0;
     }
-
     h1 {
       text-align: center;
     }
-
+    canvas {
+      max-width: 800px;
+      margin: 0 auto 30px;
+      display: block;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
       margin-bottom: 40px;
     }
-
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: center;
     }
-
     th {
       background-color: #f0f0f0;
     }
@@ -36,6 +38,7 @@
 </head>
 <body>
   <h1>👀 전체 데이터 보기 (숨김 포함)</h1>
+  <canvas id="dateChart" width="600" height="200"></canvas>
   <table id="allTable">
     <thead>
       <tr>
@@ -44,12 +47,11 @@
         <th>시간</th>
         <th>송출사</th>
         <th>내용</th>
-        <th colspan="12">숨김 여부</th> <!-- ✅ 수정: colspan="12" -->
+        <th>숨김 여부</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-
   <div id="dateCountsContainer"></div>
 
   <script>
@@ -74,7 +76,6 @@
         const data = doc.data();
         const tr = document.createElement("tr");
 
-        // 날짜별 건수 집계
         const date = data.date || '날짜 없음';
         dateCounts[date] = (dateCounts[date] || 0) + 1;
 
@@ -89,7 +90,35 @@
         tbody.appendChild(tr);
       });
 
-      // 날짜별 건수 테이블 생성
+      // Chart.js 그래프 생성
+      const labels = Object.keys(dateCounts).sort();
+      const values = labels.map(date => dateCounts[date]);
+
+      const ctx = document.getElementById('dateChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '날짜별 건수',
+            data: values,
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // 날짜별 건수 표 출력
       const countTable = document.createElement("table");
       countTable.innerHTML = `
         <thead>
@@ -97,8 +126,8 @@
           <tr><th>날짜</th><th>건수</th></tr>
         </thead>
         <tbody>
-          ${Object.entries(dateCounts).map(([date, count]) => `
-            <tr><td>${date}</td><td>${count}</td></tr>
+          ${labels.map(date => `
+            <tr><td>${date}</td><td>${dateCounts[date]}</td></tr>
           `).join("")}
         </tbody>
       `;
