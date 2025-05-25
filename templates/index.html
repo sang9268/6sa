@@ -27,21 +27,64 @@
 
 
     // 로그인 상태 확인 함수
-    function checkLogin() {
-      const currentUser = localStorage.getItem("username");
-      if (currentUser) {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("service-container").style.display = "block";
-        document.getElementById("currentUser").innerText = `${currentUser} 님`;  // 로그인한 계정 표시
-        loadTable();
-        listenToAlarmStatus(); // 알람 상태 리스너 시작
-	const senderSelect = document.getElementById("inputSender");
-        if (senderSelect) senderSelect.value = currentUser.toUpperCase();  // 선택 기본값 설정
-      } else {
-        document.getElementById("login-container").style.display = "block";
-        document.getElementById("service-container").style.display = "none";
-      }
+function checkLogin() {
+  const currentUser = localStorage.getItem("username");
+
+  if (currentUser) {
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("service-container").style.display = "block";
+    document.getElementById("currentUser").innerText = `${currentUser} 님`;
+    loadTable();
+    listenToAlarmStatus();
+
+    const senderSelect = document.getElementById("inputSender");
+    if (senderSelect) senderSelect.value = currentUser.toUpperCase();
+
+    // ✅ 계정별 권한 설정 (확장 가능)
+    const userPermissions = {
+      sbs: { backup: false, alarm: true, excel: true },
+      kbs: { backup: false, alarm: true, excel: true },
+      mbc: { backup: false, alarm: true, excel: true },
+      ytn: { backup: false, alarm: true, excel: true },
+      "lgu+": { backup: true, alarm: true, excel: true },
+      obs: { backup: false, alarm: true, excel: true }
+    };
+
+    const permissions = userPermissions[currentUser.toLowerCase()] || {};
+
+    // ✅ 자료송출 내역 백업 버튼 제어
+    const backupBtn = document.getElementById("backupButton");
+    if (backupBtn && permissions.backup === false) {
+      backupBtn.disabled = true;
+      backupBtn.style.backgroundColor = "#ccc";
+      backupBtn.style.cursor = "not-allowed";
+      backupBtn.title = "이 계정은 백업 권한이 없습니다.";
     }
+
+    // ✅ 엑셀 저장 버튼 제어
+    const excelBtn = document.querySelector("button[onclick='downloadAsExcel()']");
+    if (excelBtn && permissions.excel === false) {
+      excelBtn.disabled = true;
+      excelBtn.style.backgroundColor = "#ccc";
+      excelBtn.style.cursor = "not-allowed";
+      excelBtn.title = "이 계정은 엑셀 저장 권한이 없습니다.";
+    }
+
+    // ✅ 알람 전송 버튼 제어
+    const alarmBtn = document.getElementById("alarmToggleButton");
+    if (alarmBtn && permissions.alarm === false) {
+      alarmBtn.disabled = true;
+      alarmBtn.style.backgroundColor = "#ccc";
+      alarmBtn.style.cursor = "not-allowed";
+      alarmBtn.title = "이 계정은 알람 전송 권한이 없습니다.";
+    }
+
+  } else {
+    document.getElementById("login-container").style.display = "block";
+    document.getElementById("service-container").style.display = "none";
+  }
+}
+
 
 function deleteAllhides() {
   tableRef
@@ -1071,8 +1114,8 @@ document.addEventListener("DOMContentLoaded", function () {
     <button onclick="openAllView()">🧾송출 이력 보기</button>
   <!--  <button id="toggleViewButton" onclick="toggleView()">📋 기본 보기</button> -->
     <button onclick="downloadAsExcel()">📊 엑셀로 저장</button>
-    <button class="deleteAll" onclick="deleteAllhides()">📋자료송출 내역 백업</button>
-    <!-- <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button> -->
+    <button id="backupButton" class="deleteAll" onclick="deleteAllhides()">📋자료송출 내역 백업</button>
+  <!-- <button class="danger-button" onclick="deleteAllRows()">❌ 전체 행 완전 삭제</button> -->
     </div>
 
   </div>
