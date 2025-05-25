@@ -488,6 +488,11 @@ ${receivers.map(rcv => `
       ${(data[rcv] && data[rcv].ack) || '확인!'}
     </button>
   </td>
+  <td>
+    <span style="font-weight: bold; color: ${data[rcv]?.exclude === '미수신' ? 'red' : 'green'};">
+      ${data[rcv]?.exclude === '미수신' ? '제외' : '포함'}
+    </span>
+  </td>
 `).join('')}
   <td>
     <button onclick="deleteRowById('${doc.id}')">행 삭제</button>
@@ -1091,16 +1096,16 @@ document.addEventListener("DOMContentLoaded", function () {
           <th rowspan="2">올린시간</th>
 	  <th rowspan="2">송출사</th>
           <th rowspan="2">내용</th>
-          <th colspan="6">수신사</th>
+          <th colspan="12">수신사</th>
 	  <th rowspan="2">상태/관리</th>
         </tr>
 <tr>
-<th><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
-<th><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
-<th><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
-<th><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
-<th><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
-<th><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
+<th colspan="2"><img src="/static/kbs.png" class="logo-img" alt="KBS"></th>
+<th colspan="2"><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
+<th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
+<th colspan="2"><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
+<th colspan="2"><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
+<th colspan="2"><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
 </tr>
 
       </thead>
