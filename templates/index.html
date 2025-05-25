@@ -85,6 +85,14 @@ function checkLogin() {
   }
 }
 
+function triggerPopupForAllUsers() {
+  alarmRef.set({
+    isAlarmActive: true,
+    alarmMessage: "📡 6사보도 자료송출이 등록되었습니다!",
+    timestamp: Date.now()
+  });
+}
+
 
 function deleteAllhides() {
   tableRef
@@ -173,21 +181,31 @@ function listenToAlarmStatus() {
   alarmRef.onSnapshot(doc => {
     const alarmStatus = doc.data();
     const username = localStorage.getItem("username");
-    const acknowledged = localStorage.getItem(`alarmAcknowledged_${username}`) === "true";
+    if (!alarmStatus || !username) return;
 
-if (alarmStatus && alarmStatus.isAlarmActive) {
-  if (!acknowledged) {
-        initializeAudioContext();    // 오디오 초기화
-        playLoopingBeep();           // 부드러운 알람 시작
-        showAlarmPopup();           // 팝업 표시
-  }
-} else {
-      stopLoopingBeep();            // 전체 알람 중단
-      hideAlarmPopup();            
-      localStorage.removeItem(`alarmAcknowledged_${username}`);
-}
+    const acknowledgedKey = `alarmAcknowledged_${username}`;
+    const acknowledgedAt = parseInt(localStorage.getItem(acknowledgedKey) || "0", 10);
+    const now = Date.now();
+    const alarmStart = alarmStatus.timestamp || now;
+
+    // 아직 확인하지 않았고 5분 이내면 알람 표시
+    if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart)) {
+      if (now - alarmStart < 5 * 60 * 1000) {
+        initializeAudioContext();
+        playLoopingBeep();
+        showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
+      } else {
+        hideAlarmPopup();
+        stopLoopingBeep();
+        localStorage.setItem(acknowledgedKey, now.toString());
+      }
+    } else {
+      hideAlarmPopup();
+      stopLoopingBeep();
+    }
   });
 }
+
 
 function toggleBroadcastStatus(button) {
   const tr = button.closest("tr");
@@ -384,9 +402,13 @@ function onContentChange(id, text) {
   });
 }
 
-function showAlarmPopup() {
-  document.getElementById("alarmPopup").style.display = "block";
+function showAlarmPopup(message) {
+  const popup = document.getElementById("alarmPopup");
+  const textEl = popup.querySelector(".alarm-text");
+  if (textEl) textEl.innerText = message;
+  popup.style.display = "block";
 }
+
 
 function hideAlarmPopup() {
   document.getElementById("alarmPopup").style.display = "none";
@@ -396,14 +418,16 @@ function acknowledgeAlarm() {
   const username = localStorage.getItem("username");
   if (!username) return;
 
-  localStorage.setItem(`alarmAcknowledged_${username}`, "true");
+  const now = Date.now();
+  localStorage.setItem(`alarmAcknowledged_${username}`, now.toString());
+
   hideAlarmPopup();
   stopLoopingBeep();
-
   if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume(); // 다음 알람 위해 재활성화
+    audioCtx.resume();
   }
 }
+
 
 
 	  
@@ -934,7 +958,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	
 	/* 🔒 테이블 헤더 고정용 래퍼 */
 	.table-wrapper {
-	  max-height: 600px;  /* 필요 시 조절 가능 */
+	  max-height: 900px;  /* 필요 시 조절 가능 */
 	  overflow-y: auto;
 	  background-color: #ffffff; 
 	}
@@ -1162,7 +1186,7 @@ document.addEventListener("DOMContentLoaded", function () {
   text-align: center;
   z-index: 9999;
 ">
-  <p style="font-size: 18px; font-weight: bold;">🔔 자료 송출 알림이 발생했습니다!</p>
+  <p class="alarm-text" style="font-size: 18px; font-weight: bold;">🔔 자료 송출 알림이 발생했습니다!</p>
   <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
   <button onclick="acknowledgeAlarm()" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">✅ 확인</button>
 </div>
