@@ -623,15 +623,21 @@ function registerContent() {
     hidden: false,
     broadcastStatus: "송출전"
   };
-
+	
+  const currentUser = localStorage.getItem("username")?.toUpperCase();  // 로그인한 계정
   const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
   receivers.forEach(rcv => {
-  const isSender = rcv === sender;  // 송출사와 수신사가 같으면 반드시 포함
-  const isExcluded = !isSender && [...checkboxes].some(cb => cb.value === rcv);
-    rowData[rcv] = {
-      ack: "확인!",
-  	exclude: isExcluded ? "미수신" : "수신"
-    };
+  const isSender = rcv === sender;                 // select box로 선택한 송출사
+  const isCurrentUser = rcv === currentUser;       // 현재 로그인한 계정
+  const isExcludedChecked = [...checkboxes].some(cb => cb.value === rcv);
+
+  // 송출사 또는 로그인 계정이면 '포함' 고정, 아니면 체크 여부에 따라 제외
+  const isExcluded = !(isSender || isCurrentUser) && isExcludedChecked;
+
+  rowData[rcv] = {
+    ack: "확인!",
+    exclude: isExcluded ? "미수신" : "수신"
+  };
   });
 
   tableRef.add(rowData).then(() => {
