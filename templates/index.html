@@ -43,6 +43,8 @@ function checkLogin() {
     // ✅ 계정별 권한 설정 (확장 가능)
     const userPermissions = {
       sbs: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+      SBS_NQC: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+      SBS_ING: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
       kbs: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
       mbc: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
       ytn: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
@@ -232,7 +234,7 @@ function acknowledgeSingleAlarm(popupId, docId) {
 
  // 2) 해당 행의 해당 계정 ack 상태 '확인완료'로 업데이트
   if (docId) {
-    const userKey = username.toUpperCase();
+    const userKey = username.toLowerCase();
     const updateData = {};
     updateData[`${userKey}.ack`] = "확인완료";
 
@@ -532,6 +534,8 @@ function loadTable() {
 
 	     const userPermissions = {
 	    sbs: { canDelete: false },
+	    SBS_NQC: { canDelete: false },
+	    SBS_ING: { canDelete: false },
 	    // ...다른 계정 권한 정의...
 	  };
 	  const permissions = userPermissions[currentUser?.toLowerCase()] || { canDelete: true };
@@ -1167,9 +1171,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* 미확인 - 노란색 배경, 검정 글씨 */
 .ack-pending {
-  background-color: #ff9800; /* 주황색 */
+  background-color: #ffb74d; /* 밝은 주황색 */
   color: black !important;
-  border-color: #f57c00; /* 조금 더 진한 주황 테두리 */
+  border-color: #ff9800; /* 기존 주황 테두리 */
 }
 
 /* 확인완료 - 초록색 배경, 흰색 글씨 */
@@ -1262,7 +1266,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	</div>
 
 	  
-<h1 class="header-fixed" style="font-size: 26px;">📡 6사보도 실시간 서비스</h1>
+<h1 class="header-fixed" style="font-size: 28px;">📡 6사보도 실시간 서비스</h1>
 	  
 <!-- ✅ 기존 내용 등록 박스 제거 또는 주석처리 -->
 <!--	  
