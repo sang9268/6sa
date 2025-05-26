@@ -42,16 +42,39 @@ function checkLogin() {
 
     // ✅ 계정별 권한 설정 (확장 가능)
     const userPermissions = {
-      sbs: { backup: false, alarm: true, excel: true },
-      kbs: { backup: false, alarm: true, excel: true },
-      mbc: { backup: false, alarm: true, excel: true },
-      ytn: { backup: false, alarm: true, excel: true },
-      "lgu+": { backup: true, alarm: true, excel: true },
-      obs: { backup: false, alarm: true, excel: true }
+      sbs: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+      kbs: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+      mbc: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+      ytn: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+      "lgu+": { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
+      obs: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
     };
 
-    const permissions = userPermissions[currentUser.toLowerCase()] || {};
+	const permissions = userPermissions[currentUser.toLowerCase()] || { canRegister: true, canDelete: true };
 
+    // 내용 등록 버튼 제어
+    const registerBtn = document.querySelector("button[onclick='openContentPopup()']");
+    if (registerBtn) {
+      registerBtn.disabled = !permissions.canRegister;
+      registerBtn.style.opacity = permissions.canRegister ? "1" : "0.5";
+      registerBtn.style.cursor = permissions.canRegister ? "pointer" : "not-allowed";
+      registerBtn.title = permissions.canRegister ? "" : "이 계정은 내용 등록 권한이 없습니다.";
+    }
+
+    // 행 삭제 버튼 제어 (table 내 각 행의 삭제 버튼도 비활성화 처리)
+    // 행 삭제 버튼은 loadTable()에서 매번 생성하므로, 여기서는 전체 테이블 행 삭제 버튼을 제어하는 버튼이 따로 있다면 제어해주고,
+    // 아니면 loadTable()에서 권한 체크 후 disabled 처리하도록 해야 합니다.
+    // 예시로 id="deleteRowButton"가 있다면 다음과 같이 처리 가능:
+    
+    const deleteRowBtn = document.getElementById("deleteRowButton");
+    if (deleteRowBtn) {
+      deleteRowBtn.disabled = !permissions.canDelete;
+      deleteRowBtn.style.opacity = permissions.canDelete ? "1" : "0.5";
+      deleteRowBtn.style.cursor = permissions.canDelete ? "pointer" : "not-allowed";
+      deleteRowBtn.title = permissions.canDelete ? "" : "이 계정은 행 삭제 권한이 없습니다.";
+    }
+   
+	  
     // ✅ 자료송출 내역 백업 버튼 제어
     const backupBtn = document.getElementById("backupButton");
     if (backupBtn && permissions.backup === false) {
@@ -507,6 +530,12 @@ function loadTable() {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = ""; // 테이블 초기화
 
+	     const userPermissions = {
+	    sbs: { canDelete: false },
+	    // ...다른 계정 권한 정의...
+	  };
+	  const permissions = userPermissions[currentUser?.toLowerCase()] || { canDelete: true };
+
     const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
     docs.forEach((doc, index) => {
       const data = doc.data();
@@ -524,19 +553,19 @@ function loadTable() {
 
 
           // 수신사별로 제외 상태를 체크하여, 해당 수신사에서 제외된 행만 숨김
-          let shouldDisplayRow = true;
+        //  let shouldDisplayRow = true;
 
-          receivers.forEach((name, idx) => {
+        //  receivers.forEach((name, idx) => {
             // 로그인된 계정이 해당 수신사일 경우, 대소문자 구분 없이 비교
-            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "제외") {
-              shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
-            }
-          });
+         //   if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "제외") {
+        //      shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
+       //     }
+        //  });
 
           // 행을 숨기지 않도록 설정
-          if (!shouldDisplayRow) {
-            tr.style.display = "none";  // 해당 수신사에서 제외된 경우 해당 행을 숨김
-          }
+      //    if (!shouldDisplayRow) {
+       //     tr.style.display = "none";  // 해당 수신사에서 제외된 경우 해당 행을 숨김
+      //    }
 
           tr.innerHTML = `
   	  <td>${total - index}</td>
@@ -563,7 +592,7 @@ function loadTable() {
     `;
   }).join('')}
   <td>
-    <button onclick="deleteRowById('${doc.id}')">행 삭제</button>
+   <button onclick="deleteRowById('${doc.id}')" ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제</button>
   </td>
 
           `;
@@ -714,14 +743,15 @@ function registerContent() {
   receivers.forEach(rcv => {
   const isSender = rcv === sender;                 // select box로 선택한 송출사
   const isCurrentUser = rcv === currentUser;       // 현재 로그인한 계정
-  const isExcludedChecked = [...checkboxes].some(cb => cb.value === rcv);
+  const isIncludedChecked = [...checkboxes].some(cb => cb.value === rcv);
 
-  // 송출사 또는 로그인 계정이면 '포함' 고정, 아니면 체크 여부에 따라 제외
-  const isExcluded = !(isSender || isCurrentUser) && isExcludedChecked;
+
+// 송출사 또는 로그인 계정은 항상 포함
+const isIncluded = isSender || isCurrentUser || isIncludedChecked;
 
   rowData[rcv] = {
     ack: "미확인",
-    exclude: isExcluded ? "제외" : "포함"
+    exclude: isIncluded ? "포함" : "제외"
   };
   });
 
@@ -1225,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	    📥 내용 등록
 	  </button>
 	  <div style="display: flex; align-items: center; gap: 10px;">
+	    <button id="refreshButton" style="padding: 6px 12px; background-color: #607d8b; color: white; border-radius: 6px; border: none; cursor: pointer;">🔃 새로고침</button>
 	    <span id="currentUser" style="background: #f1f1f1; padding: 6px 12px; border-radius: 20px; font-weight: bold;"></span>
 	    <button onclick="logout()" style="padding: 6px 12px; border: none; background-color: #607d8b; color: white; border-radius: 8px;">로그아웃</button>
 	  </div>
@@ -1368,13 +1399,13 @@ document.addEventListener("DOMContentLoaded", function () {
     <option value="LGU+">LGU+</option>
   </select>
   <div style="margin-bottom: 10px;">
-    <p style="margin-bottom: 4px;">제외할 수신사 선택</p>
-    <label><input type="checkbox" value="KBS" /> KBS</label>
-    <label><input type="checkbox" value="MBC" /> MBC</label>
-    <label><input type="checkbox" value="SBS" /> SBS</label>
-    <label><input type="checkbox" value="MBN" /> MBN</label>
-    <label><input type="checkbox" value="YTN" /> YTN</label>
-    <label><input type="checkbox" value="OBS" /> OBS</label>
+    <p style="margin-bottom: 4px;">포 수신사 선택</p>
+  <label><input type="checkbox" value="KBS" checked /> KBS</label>
+  <label><input type="checkbox" value="MBC" checked /> MBC</label>
+  <label><input type="checkbox" value="SBS" checked /> SBS</label>
+  <label><input type="checkbox" value="MBN" checked /> MBN</label>
+  <label><input type="checkbox" value="YTN" checked /> YTN</label>
+  <label><input type="checkbox" value="OBS" checked /> OBS</label>
   </div>
   <div style="text-align: right;">
     <button onclick="registerContent()" style="background-color: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 6px;">등록</button>
