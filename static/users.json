@@ -1,5 +1,5 @@
 {
-  "kbs": { "password": "kbs", "role": "editor", "enabled": true },
+  "KBS": { "password": "KBS", "role": "editor", "enabled": true },
   "sbs": { "password": "sbs", "role": "editor", "enabled": true },
   "mbc": { "password": "mbc", "role": "editor", "enabled": true },
   "mbn": { "password": "mbn", "role": "editor", "enabled": true },
