@@ -247,12 +247,9 @@ function acknowledgeSingleAlarm(popupId, docId) {
   const now = Date.now();
   localStorage.setItem(`alarmAcknowledged_${username}_${popupId}`, now.toString());
 
- // username을 수신사 필드명으로 변환
-  let userKey = username.toUpperCase();
-  if (["SBS_NQC", "SBS_ING"].includes(userKey)) {
-    userKey = "SBS";
-  }
-	
+ // 2) 해당 행의 해당 계정 ack 상태 '확인완료'로 업데이트
+  if (docId) {
+    const userKey = username;
     const updateData = {};
     updateData[`${userKey}.ack`] = "확인완료";
 
