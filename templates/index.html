@@ -492,19 +492,11 @@ function acknowledgeAlarm() {
           }
 
           tr.innerHTML = `
-  	    <td>${total - index}</td>  <!-- ✅ 역순 번호 표시 -->
-	<!--    <td><button onclick="toggleBroadcastStatus(this)">${status}</button></td> -->
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'date', this.innerText)">${data.date || ''}</td>
-            <td contenteditable="true" onblur="updateCell('${doc.id}', 'time', this.innerText)">${data.time || ''}</td>
-		<td>
-  		<select onchange="updateCell('${doc.id}', 'sender', this.value)">
-   		 ${["선택","LGU+", "KBS", "MBC", "SBS", "YTN", "MBN", "OBS"].map(option => `
-   		   <option value="${option}" ${data.sender === option ? 'selected' : ''}>${option}</option>
-  		  `).join('')}
- 		 </select>
-		</td>
-            <td contenteditable="true" onblur="onContentChange('${doc.id}', this.innerText)">${data.content || ''}</td>
-
+  	  <td>${total - index}</td>
+	  <td>${data.date || ''}</td>
+	  <td>${data.time || ''}</td>
+	  <td>${data.sender || ''}</td>
+	  <td>${data.content || ''}</td>
 
 ${receivers.map(rcv => `
   <td>
@@ -799,10 +791,18 @@ document.addEventListener("DOMContentLoaded", function () {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
+/* 번호, 날짜, 올린시간, 송출사 열 전체 글자 크기 키우기 */
+#logTable th:nth-child(-n+4),
+#logTable td:nth-child(-n+4) {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+	  
+	  
     /* ‘내용’ 입력 칼럼(테이블 5번째 칼럼) 글자 크게 */
 #logTable td:nth-child(5),
 #logTable th:nth-child(5) {
-  font-size: 1.2rem;    /* 원하시는 크기로 조정하세요 */
+  font-size: 1.4rem;    /* 원하시는 크기로 조정하세요 */
   line-height: 1.4;     /* 필요시 줄간격도 조절 */
 }
 
