@@ -175,7 +175,7 @@ function stopLoopingBeep() {
 }
 
 // 여러 팝업 생성 함수
-function createAlarmPopup(message, popupId) {
+function createAlarmPopup(message, popupId, docId) {
   const container = document.getElementById("alarmPopupContainer");
 
   const popup = document.createElement("div");
@@ -190,14 +190,14 @@ function createAlarmPopup(message, popupId) {
   popup.innerHTML = `
     <p class="alarm-text" style="font-size: 18px; font-weight: bold;">${message.replace(/\n/g, "<br>")}</p>
     <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
-    <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}')">✅ 확인</button>
+    <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}', '${docId}')">✅ 확인</button>
   `;
 
   container.appendChild(popup);
 }
 
 // 개별 팝업 닫기 함수
-function acknowledgeSingleAlarm(popupId) {
+function acknowledgeSingleAlarm(popupId, docId) {
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
@@ -207,12 +207,26 @@ function acknowledgeSingleAlarm(popupId) {
   const now = Date.now();
   localStorage.setItem(`alarmAcknowledged_${username}_${popupId}`, now.toString());
 
+ // 2) 해당 행의 해당 계정 ack 상태 '확인완료'로 업데이트
+  if (docId) {
+    const userKey = username.toUpperCase();
+    const updateData = {};
+    updateData[`${userKey}.ack`] = "확인완료";
+
+    tableRef.doc(docId).update(updateData)
+      .then(() => {
+        loadTable(); // UI 갱신
+      })
+      .catch(err => {
+        console.error("ack 상태 업데이트 실패:", err);
+      });
+  }
+
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 }
-
 	  
 
 function listenToAlarmStatus() {
@@ -228,15 +242,9 @@ function listenToAlarmStatus() {
 
     // 아직 확인하지 않았고 5분 이내면 알람 표시
     if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart)) {
-      if (now - alarmStart < 5 * 60 * 1000) {
         initializeAudioContext();
         playLoopingBeep();
         showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
-      } else {
-        hideAlarmPopup();
-        stopLoopingBeep();
-        localStorage.setItem(acknowledgedKey, now.toString());
-      }
     } else {
       hideAlarmPopup();
       stopLoopingBeep();
@@ -582,9 +590,26 @@ function loadTable() {
 		  <td colspan="13" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 수신버튼은 제외할 타 방송사만 눌러주세요.</td>
 		`;
     		tbody.appendChild(fixedRow);
+
+		// 여기 추가
+		applyExcludeStyles();
       });
     }
 
+function applyExcludeStyles() {
+  document.querySelectorAll('.exclude-text').forEach(el => {
+    const text = el.textContent.trim();
+    el.classList.remove('exclude-include', 'exclude-exclude'); // 기존 클래스 초기화
+
+    if (text === '포함') {
+      el.classList.add('exclude-include');
+    } else if (text === '제외') {
+      el.classList.add('exclude-exclude');
+    }
+  });
+}
+	  
+	  
  	function toggleView() {
 	  const btn = document.getElementById("toggleViewButton");
 	
@@ -700,7 +725,8 @@ function registerContent() {
   };
   });
 
-tableRef.add(rowData).then(() => {
+tableRef.add(rowData).then((docRef) => {
+        const docId = docRef.id;  // 새로 생성된 문서 ID 얻기
 	const popupId = `alarm_${Date.now()}`;  // 고유 팝업 ID 생성
 	const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!
 	📑 내용: ${content}
@@ -1111,9 +1137,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* 미확인 - 노란색 배경, 검정 글씨 */
 .ack-pending {
-  background-color: #ffeb3b;
+  background-color: #ff9800; /* 주황색 */
   color: black !important;
-  border-color: #fbc02d;
+  border-color: #f57c00; /* 조금 더 진한 주황 테두리 */
 }
 
 /* 확인완료 - 초록색 배경, 흰색 글씨 */
@@ -1136,16 +1162,18 @@ document.addEventListener("DOMContentLoaded", function () {
   margin-top: 4px;
 }
 
-/* 포함 - 연한 파란색 배경 */
-.exclude-text:contains('포함') {
-  background-color: #bbdefb;
+/* 포함 */
+.exclude-include {
+  background-color: #bbdefb; /* 연한 파란색 */
   border-color: #64b5f6;
+  color: black !important;
 }
 
-/* 제외 - 연한 빨강색 배경 */
-.exclude-text:contains('제외') {
-  background-color: #ffcdd2;
+/* 제외 */
+.exclude-exclude {
+  background-color: #ffcdd2; /* 연한 빨강색 */
   border-color: #e57373;
+  color: black !important;
 }
 
 /* 깜빡임 애니메이션 정의 */
@@ -1203,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	</div>
 
 	  
-<h1 class="header-fixed" style="font-size: 20px;">📡 6사보도 실시간 서비스</h1>
+<h1 class="header-fixed" style="font-size: 24px;">📡 6사보도 실시간 서비스</h1>
 	  
 <!-- ✅ 기존 내용 등록 박스 제거 또는 주석처리 -->
 <!--	  
