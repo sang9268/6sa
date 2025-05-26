@@ -174,6 +174,44 @@ function stopLoopingBeep() {
   if (gainNode) gainNode.disconnect();
 }
 
+// 여러 팝업 생성 함수
+function createAlarmPopup(message, popupId) {
+  const container = document.getElementById("alarmPopupContainer");
+
+  const popup = document.createElement("div");
+  popup.id = popupId;
+  popup.style.background = "white";
+  popup.style.padding = "20px";
+  popup.style.borderRadius = "12px";
+  popup.style.boxShadow = "0 0 12px rgba(0,0,0,0.3)";
+  popup.style.marginBottom = "10px";
+  popup.style.textAlign = "center";
+
+  popup.innerHTML = `
+    <p class="alarm-text" style="font-size: 18px; font-weight: bold;">${message.replace(/\n/g, "<br>")}</p>
+    <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
+    <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}')">✅ 확인</button>
+  `;
+
+  container.appendChild(popup);
+}
+
+// 개별 팝업 닫기 함수
+function acknowledgeSingleAlarm(popupId) {
+  const popup = document.getElementById(popupId);
+  if (popup) popup.remove();
+
+  const username = localStorage.getItem("username");
+  if (!username) return;
+
+  const now = Date.now();
+  localStorage.setItem(`alarmAcknowledged_${username}_${popupId}`, now.toString());
+
+  stopLoopingBeep();
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
 
 	  
 
@@ -446,10 +484,11 @@ function acknowledgeAlarm() {
       });
     }
 
-    // 데이터 로드 함수
-    function loadTable() {
+// 데이터 로드 함수
+function loadTable() {
       const dateCounts = {}; // 이 줄을 loadTable() 함수 맨 위에 추가
       const currentUser = localStorage.getItem("username"); // 로그인된 사용자
+      const currentUserUpper = (currentUser || "").toUpperCase();
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
 	tableRef
@@ -498,18 +537,22 @@ function acknowledgeAlarm() {
 	  <td>${data.sender || ''}</td>
 	  <td>${data.content || ''}</td>
 
-${receivers.map(rcv => `
-  <td>
-    <button class="logo-${rcv.toLowerCase()}" onclick="toggleAck('${doc.id}', '${rcv}')">
-      ${(data[rcv] && data[rcv].ack) || '확인!'}
-    </button>
-  </td>
-  <td>
-    <span style="font-weight: bold; color: ${data[rcv]?.exclude === '미수신' ? 'red' : 'green'};">
-      ${data[rcv]?.exclude === '미수신' ? '제외' : '포함'}
-    </span>
-  </td>
-`).join('')}
+  ${receivers.map(rcv => {
+    const ackText = (data[rcv] && data[rcv].ack) || '미확인';
+    const excludeText = (data[rcv] && data[rcv].exclude) || '포함';
+
+    const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
+    // 본인 계정 수신사이면서 미확인 상태일 때만 깜빡임 적용
+    const blinkClass = (ackText !== '확인완료' && rcv === currentUserUpper) ? 'blink' : '';
+
+    return `
+      <td colspan="2">
+        <span class="ack-text ${ackClass} ${blinkClass}" onclick="toggleAck('${doc.id}', '${rcv}')">${ackText}</span>
+        <br/>
+        <span class="exclude-text">${excludeText}</span>
+      </td>
+    `;
+  }).join('')}
   <td>
     <button onclick="deleteRowById('${doc.id}')">행 삭제</button>
   </td>
@@ -567,8 +610,8 @@ ${receivers.map(rcv => `
       const cellRef = tableRef.doc(id);
       cellRef.get().then(doc => {
         const data = doc.data();
-        const current = (data[rcv] && data[rcv].ack) || '확인!';
-        const updated = current === '확인!' ? '✅ 확인됨' : '확인!';
+        const current = (data[rcv] && data[rcv].ack) || '미확인';
+        const updated = current === '미확인' ? '확인완료' : '미확인';
         cellRef.update({[`${rcv}.ack`]: updated}).then(() => {
           loadTable();
         });
@@ -657,18 +700,21 @@ function registerContent() {
   });
 
 tableRef.add(rowData).then(() => {
+	const popupId = `alarm_${Date.now()}`;  // 고유 팝업 ID 생성
 	const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!
 	📑 내용: ${content}
 	📤 송출사: ${sender}`;
-
-  alarmRef.set({
+	
+createAlarmPopup(popupMessage, popupId);
+	
+   alarmRef.set({
     isAlarmActive: true,
     alarmMessage: popupMessage,
     timestamp: Date.now()
-  }).then(() => {
-    loadTable();
-    document.getElementById("inputContent").value = "";
   });
+
+  loadTable();
+  document.getElementById("inputContent").value = "";
 });
 
 }
@@ -791,13 +837,14 @@ document.addEventListener("DOMContentLoaded", function () {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
-/* 번호, 날짜, 올린시간, 송출사 열 전체 글자 크기 키우기 */
-#logTable th:nth-child(-n+4),
-#logTable td:nth-child(-n+4) {
+/* 1~4열 헤더만 글자 크기 및 굵기 키우기 */
+#logTable th:nth-child(-n+4) {
   font-size: 1.4rem;
-  font-weight: bold;
 }
-	  
+
+#logTable th[colspan="12"] {
+  font-size: 1.4rem;
+}  
 	  
     /* ‘내용’ 입력 칼럼(테이블 5번째 칼럼) 글자 크게 */
 #logTable td:nth-child(5),
@@ -1049,6 +1096,51 @@ document.addEventListener("DOMContentLoaded", function () {
       font-size: 16px;
      }
 
+/* 확인 상태 텍스트 스타일 - 네모 박스 느낌 */
+.ack-text {
+  color: black !important;
+  font-weight: bold;
+  border: 1px solid black;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 미확인 상태 - 노란 배경 */
+.ack-pending {
+  background-color: #ffeb3b;
+  color: black !important;
+}
+
+/* 확인완료 상태 - 녹색 배경 */
+.ack-confirmed {
+  background-color: #4caf50;
+  color: white !important;
+}
+
+/* 포함/제외 텍스트 검정색 통일 */
+.exclude-text {
+  color: black !important;
+  font-weight: bold;
+  user-select: none;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* 깜빡임 애니메이션 정의 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 깜빡임 효과 클래스 */
+.blink {
+  animation: blink 1.2s infinite;
+}
+
+
     /* 로그인 버튼 디자인 */
     .login-container button {
       width: 100%;
@@ -1200,6 +1292,20 @@ document.addEventListener("DOMContentLoaded", function () {
   <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
   <button onclick="acknowledgeAlarm()" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">✅ 확인</button>
 </div>
+
+<!-- 알람 팝업 컨테이너 -->
+<div id="alarmPopupContainer" style="
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  max-width: 400px;
+  width: 90%;
+">
+  <!-- 팝업이 여기에 여러 개 동적 생성됨 -->
+</div>
+
 
 <!-- 내용 등록 팝업 -->
 <div id="contentPopup" style="display: none; position: fixed; top: 50px; left: 30px; width: 400px; background: #fff; border: 2px solid #4CAF50; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999;">
