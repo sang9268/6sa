@@ -242,32 +242,28 @@ function acknowledgeSingleAlarm(popupId, docId) {
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
-  // 2. 현재 로그인 사용자 가져오기
-  const username = localStorage.getItem("username");
-  if (!username) {
-    console.warn("로그인 정보가 없어 알림 확인 처리를 할 수 없습니다.");
+ if (!docId) {
+    console.warn("문서 ID가 없어 확인 상태를 업데이트할 수 없습니다.");
     return;
   }
 
-  // 3. 로컬스토리지에 해당 알림 확인 시간 저장 (중복 알림 방지용)
-  const now = Date.now();
-  localStorage.setItem(`alarmAcknowledged_${username}_${popupId}`, now.toString());
+  // 2. Firestore 문서 내 모든 수신사 필드 ack를 '확인완료'로 변경
+  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
+  const updateData = {};
 
-  // 4. Firestore 해당 문서의 현재 로그인 사용자 필드 ack 값을 '확인완료'로 업데이트
-  if (docId) {
-    const updateData = {};
-    updateData[`${username}.ack`] = "확인완료";
+  receivers.forEach(rcv => {
+    updateData[`${rcv}.ack`] = "확인완료";
+  });
 
-    tableRef.doc(docId).update(updateData)
-      .then(() => {
-        loadTable(); // UI 새로고침
-      })
-      .catch(err => {
-        console.error("ack 상태 업데이트 실패:", err);
-      });
-  }
+  tableRef.doc(docId).update(updateData)
+    .then(() => {
+      loadTable(); // UI 새로고침
+    })
+    .catch(err => {
+      console.error("ack 상태 업데이트 실패:", err);
+    });
 
-  // 5. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
+  // 3. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
