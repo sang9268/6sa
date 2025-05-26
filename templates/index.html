@@ -520,7 +520,7 @@ function loadTable() {
 
           receivers.forEach((name, idx) => {
             // 로그인된 계정이 해당 수신사일 경우, 대소문자 구분 없이 비교
-            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "미수신") {
+            if (currentUser.toUpperCase() === name.toUpperCase() && data[name] && data[name].exclude === "제외") {
               shouldDisplayRow = false;  // 해당 수신사에서 제외된 경우 해당 행을 숨기도록 설정
             }
           });
@@ -547,10 +547,10 @@ function loadTable() {
 
     return `
       <td>
-        <span class="ack-text ${ackClass} ${blinkClass}" onclick="toggleAck('${doc.id}', '${rcv}')">${ackText}</span>
+     	 <span class="ack-text ${ackClass} ${blinkClass}">${ackText}</span>
       </td>
       <td>
-        <span class="exclude-text">${excludeText}</span>
+         <span class="exclude-text">${excludeText}</span>
       </td>
     `;
   }).join('')}
@@ -631,7 +631,7 @@ function loadTable() {
 
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
       receivers.forEach(rcv => {
-        rowData[rcv] = {ack: '미확인', exclude: '수신'};
+        rowData[rcv] = {ack: '미확인', exclude: '제외'};
       });
       tableRef.add(rowData).then(() => {
         loadTable();
@@ -696,7 +696,7 @@ function registerContent() {
 
   rowData[rcv] = {
     ack: "미확인",
-    exclude: isExcluded ? "미수신" : "수신"
+    exclude: isExcluded ? "제외" : "포함"
   };
   });
 
@@ -1097,37 +1097,55 @@ document.addEventListener("DOMContentLoaded", function () {
       font-size: 16px;
      }
 
-/* 확인 상태 텍스트 스타일 - 네모 박스 느낌 */
+/* 확인 상태 텍스트 네모박스 스타일 */
 .ack-text {
-  cursor: pointer;
-  user-select: none;
-  font-weight: bold;
-  border: 1px solid black;
+  display: inline-block;
   padding: 4px 10px;
   border-radius: 4px;
-  display: inline-block;
+  font-weight: bold;
+  border: 1px solid black;
+  user-select: none;
+  cursor: default;
   color: black !important;
 }
 
-/* 미확인 상태 - 노란 배경 */
+/* 미확인 - 노란색 배경, 검정 글씨 */
 .ack-pending {
   background-color: #ffeb3b;
   color: black !important;
+  border-color: #fbc02d;
 }
 
-/* 확인완료 상태 - 녹색 배경 */
+/* 확인완료 - 초록색 배경, 흰색 글씨 */
 .ack-confirmed {
   background-color: #4caf50;
   color: white !important;
+  border-color: #388e3c;
 }
 
-/* 포함/제외 텍스트 검정색 통일 */
+/* 포함/제외 텍스트 네모박스 스타일 */
 .exclude-text {
-  color: black !important;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
   font-weight: bold;
   user-select: none;
-  display: inline-block;
+  border: 1px solid black;
+  color: black !important;
+  cursor: default;
   margin-top: 4px;
+}
+
+/* 포함 - 연한 파란색 배경 */
+.exclude-text:contains('포함') {
+  background-color: #bbdefb;
+  border-color: #64b5f6;
+}
+
+/* 제외 - 연한 빨강색 배경 */
+.exclude-text:contains('제외') {
+  background-color: #ffcdd2;
+  border-color: #e57373;
 }
 
 /* 깜빡임 애니메이션 정의 */
