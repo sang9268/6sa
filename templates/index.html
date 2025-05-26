@@ -242,18 +242,21 @@ function acknowledgeSingleAlarm(popupId, docId) {
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
- if (!docId) {
+  if (!docId) {
     console.warn("문서 ID가 없어 확인 상태를 업데이트할 수 없습니다.");
     return;
   }
 
-  // 2. Firestore 문서 내 모든 수신사 필드 ack를 '확인완료'로 변경
-  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
-  const updateData = {};
+  // 2. 현재 로그인 사용자 가져오기
+  const username = localStorage.getItem("username");
+  if (!username) {
+    console.warn("로그인 정보가 없어 알림 확인 처리를 할 수 없습니다.");
+    return;
+  }
 
-  receivers.forEach(rcv => {
-    updateData[`${rcv}.ack`] = "확인완료";
-  });
+  // 3. Firestore 문서 내 현재 로그인 사용자 필드 ack를 '확인완료'로 변경
+  const updateData = {};
+  updateData[`${username}.ack`] = "확인완료";
 
   tableRef.doc(docId).update(updateData)
     .then(() => {
@@ -263,12 +266,13 @@ function acknowledgeSingleAlarm(popupId, docId) {
       console.error("ack 상태 업데이트 실패:", err);
     });
 
-  // 3. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
+  // 4. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 }
+
 
 	  
 
