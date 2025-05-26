@@ -546,9 +546,10 @@ function loadTable() {
     const blinkClass = (ackText !== '확인완료' && rcv === currentUserUpper) ? 'blink' : '';
 
     return `
-      <td colspan="2">
+      <td>
         <span class="ack-text ${ackClass} ${blinkClass}" onclick="toggleAck('${doc.id}', '${rcv}')">${ackText}</span>
-        <br/>
+      </td>
+      <td>
         <span class="exclude-text">${excludeText}</span>
       </td>
     `;
@@ -630,7 +631,7 @@ function loadTable() {
 
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
       receivers.forEach(rcv => {
-        rowData[rcv] = {ack: '확인!', exclude: '수신'};
+        rowData[rcv] = {ack: '미확인', exclude: '수신'};
       });
       tableRef.add(rowData).then(() => {
         loadTable();
@@ -694,7 +695,7 @@ function registerContent() {
   const isExcluded = !(isSender || isCurrentUser) && isExcludedChecked;
 
   rowData[rcv] = {
-    ack: "확인!",
+    ack: "미확인",
     exclude: isExcluded ? "미수신" : "수신"
   };
   });
@@ -1098,14 +1099,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* 확인 상태 텍스트 스타일 - 네모 박스 느낌 */
 .ack-text {
-  color: black !important;
+  cursor: pointer;
+  user-select: none;
   font-weight: bold;
   border: 1px solid black;
   padding: 4px 10px;
   border-radius: 4px;
   display: inline-block;
-  cursor: pointer;
-  user-select: none;
+  color: black !important;
 }
 
 /* 미확인 상태 - 노란 배경 */
