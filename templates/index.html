@@ -42,14 +42,14 @@ function checkLogin() {
 
     // ✅ 계정별 권한 설정 (확장 가능)
     const userPermissions = {
-      sbs: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+      SBS: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
       SBS_NQC: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
       SBS_ING: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
       KBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      mbc: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      ytn: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      "lgu+": { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
-      obs: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
+      MBC: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+      YTN: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+      "LGU+": { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
+      OBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
     };
 
 	const permissions = userPermissions[currentUser.toLowerCase()] || { canRegister: true, canDelete: true };
@@ -533,7 +533,7 @@ function loadTable() {
         tbody.innerHTML = ""; // 테이블 초기화
 
 	     const userPermissions = {
-	    sbs: { canDelete: false },
+	    SBS: { canDelete: false },
 	    SBS_NQC: { canDelete: false },
 	    SBS_ING: { canDelete: false },
 	    // ...다른 계정 권한 정의...
@@ -1333,11 +1333,11 @@ document.addEventListener("DOMContentLoaded", function () {
         </tr>
 <tr>
 <th colspan="2"><img src="/static/KBS.png" class="logo-img" alt="KBS"></th>
-<th colspan="2"><img src="/static/mbc.png" class="logo-img" alt="MBC"></th>
-<th colspan="2"><img src="/static/sbs.png" class="logo-img" alt="SBS"></th>
-<th colspan="2"><img src="/static/mbn.png" class="logo-img" alt="MBN"></th>
-<th colspan="2"><img src="/static/ytn.png" class="logo-img" alt="YTN"></th>
-<th colspan="2"><img src="/static/obs.png" class="logo-img" alt="OBS"></th>
+<th colspan="2"><img src="/static/MBC.png" class="logo-img" alt="MBC"></th>
+<th colspan="2"><img src="/static/SBS.png" class="logo-img" alt="SBS"></th>
+<th colspan="2"><img src="/static/MBN.png" class="logo-img" alt="MBN"></th>
+<th colspan="2"><img src="/static/YTN.png" class="logo-img" alt="YTN"></th>
+<th colspan="2"><img src="/static/OBS.png" class="logo-img" alt="OBS"></th>
 </tr>
 
       </thead>
@@ -1457,27 +1457,27 @@ document.addEventListener("DOMContentLoaded", function () {
   font-family: "Arial Black", sans-serif;
   letter-spacing: 1px;
 }
-.logo-mbc {
+.logo-MBC {
   font-weight: bold;
   color: #1c1c1c;
   font-size: 1.1rem;
   font-family: "Verdana", sans-serif;
 }
-.logo-sbs {
+.logo-SBS {
   font-weight: bold;
   color: #0a84ae;
   font-size: 1.1rem;
   font-family: "Tahoma", sans-serif;
 }
-.logo-mbn {
+.logo-MBN {
   font-weight: bold;
   color: #f37021;
 }
-.logo-ytn {
+.logo-YTN {
   font-weight: bold;
   color: #0066cc;
 }
-.logo-obs {
+.logo-OBS {
   font-weight: bold;
   color: #4caf50;
 }
