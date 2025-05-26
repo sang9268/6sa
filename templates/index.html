@@ -34,25 +34,40 @@ function checkLogin() {
     document.getElementById("login-container").style.display = "none";
     document.getElementById("service-container").style.display = "block";
     document.getElementById("currentUser").innerText = `${currentUser} 님`;
+
+	const senderSelect = document.getElementById("inputSender");
+	    if (senderSelect) {
+	      // SBS_NQC, SBS_ING 계정도 SBS로 간주하여 기본값 설정
+	      let defaultSender = currentUser;
+	      if (["SBS_NQC", "SBS_ING"].includes(currentUser)) {
+	        defaultSender = "SBS";
+	      }
+	      senderSelect.value = defaultSender.toUpperCase();
+	    }
     loadTable();
     listenToAlarmStatus();
 
-    const senderSelect = document.getElementById("inputSender");
-    if (senderSelect) senderSelect.value = currentUser.toUpperCase();
 
     // ✅ 계정별 권한 설정 (확장 가능)
-    const userPermissions = {
-      SBS: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
-      SBS_NQC: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
-      SBS_ING: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
-      KBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      MBC: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      YTN: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
-      "LGU+": { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
-      OBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
-    };
+	const userPermissions = {
+	  SBS_ADMIN: { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
+	  SBS: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+	  SBS_NQC: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+	  SBS_ING: { backup: false, alarm: true, excel: true, canRegister: false, canDelete: false },
+	  KBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+	  MBC: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+	  YTN: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true },
+	  "LGU+": { backup: true, alarm: true, excel: true, canRegister: true, canDelete: true },
+	  OBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
+	};
 
-	const permissions = userPermissions[currentUser] || { canRegister: true, canDelete: true };
+	let normalizedUser = currentUser;
+	if (["SBS_NQC", "SBS_ING"].includes(currentUser)) {
+	  normalizedUser = "SBS";
+	}
+	
+	const permissions = userPermissions[currentUser] || userPermissions[normalizedUser] || { canRegister: true, canDelete: true };
+
 
     // 내용 등록 버튼 제어
     const registerBtn = document.querySelector("button[onclick='openContentPopup()']");
@@ -522,6 +537,7 @@ function loadTable() {
       const dateCounts = {}; // 이 줄을 loadTable() 함수 맨 위에 추가
       const currentUser = localStorage.getItem("username"); // 로그인된 사용자
       const currentUserUpper = (currentUser || "").toUpperCase();
+      const normalizedCurrentUser = ["SBS", "SBS_NQC", "SBS_ING"].includes(currentUser) ? "SBS" : currentUser;
       const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
 	tableRef
@@ -584,7 +600,7 @@ function loadTable() {
 
     const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
     // 본인 계정 수신사이면서 미확인 상태일 때만 깜빡임 적용
-    const blinkClass = (ackText !== '확인완료' && rcv === currentUserUpper) ? 'blink' : '';
+   const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
 
     return `
       <td>
