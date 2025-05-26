@@ -265,15 +265,13 @@ function listenToAlarmStatus() {
     const now = Date.now();
     const alarmStart = alarmStatus.timestamp || now;
 
-  // 전체 알람이 꺼졌어도, 이 계정이 확인하지 않은 경우 팝업 유지
-    const isNotAcknowledged = !acknowledgedAt || acknowledgedAt < alarmStart;
-
-    if (alarmStatus.isAlarmActive || isNotAcknowledged) {
-      initializeAudioContext();
-      playLoopingBeep();
-      showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
+    // 아직 확인하지 않았고 5분 이내면 알람 표시
+    if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart)) {
+        initializeAudioContext();
+        playLoopingBeep();
+        showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
     } else {
-      hideAlarmPopup();
+      // hideAlarmPopup();
       stopLoopingBeep();
     }
   });
