@@ -238,35 +238,42 @@ function createAlarmPopup(message, popupId, docId) {
 
 // 개별 팝업 닫기 함수
 function acknowledgeSingleAlarm(popupId, docId) {
+  // 1. 팝업 닫기
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
+  // 2. 현재 로그인 사용자 가져오기
   const username = localStorage.getItem("username");
-  if (!username) return;
+  if (!username) {
+    console.warn("로그인 정보가 없어 알림 확인 처리를 할 수 없습니다.");
+    return;
+  }
 
+  // 3. 로컬스토리지에 해당 알림 확인 시간 저장 (중복 알림 방지용)
   const now = Date.now();
   localStorage.setItem(`alarmAcknowledged_${username}_${popupId}`, now.toString());
 
- // 2) 해당 행의 해당 계정 ack 상태 '확인완료'로 업데이트
+  // 4. Firestore 해당 문서의 현재 로그인 사용자 필드 ack 값을 '확인완료'로 업데이트
   if (docId) {
-    const userKey = username;
     const updateData = {};
-    updateData[`${userKey}.ack`] = "확인완료";
+    updateData[`${username}.ack`] = "확인완료";
 
     tableRef.doc(docId).update(updateData)
       .then(() => {
-        loadTable(); // UI 갱신
+        loadTable(); // UI 새로고침
       })
       .catch(err => {
         console.error("ack 상태 업데이트 실패:", err);
       });
   }
 
+  // 5. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 }
+
 	  
 
 function listenToAlarmStatus() {
