@@ -271,7 +271,7 @@ function listenToAlarmStatus() {
         playLoopingBeep();
         showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
     } else {
-      hideAlarmPopup();
+      // hideAlarmPopup();
       stopLoopingBeep();
     }
   });
