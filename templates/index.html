@@ -52,7 +52,7 @@ function checkLogin() {
       OBS: { backup: false, alarm: true, excel: true, canRegister: true, canDelete: true }
     };
 
-	const permissions = userPermissions[currentUser.toLowerCase()] || { canRegister: true, canDelete: true };
+	const permissions = userPermissions[currentUser] || { canRegister: true, canDelete: true };
 
     // 내용 등록 버튼 제어
     const registerBtn = document.querySelector("button[onclick='openContentPopup()']");
@@ -234,7 +234,7 @@ function acknowledgeSingleAlarm(popupId, docId) {
 
  // 2) 해당 행의 해당 계정 ack 상태 '확인완료'로 업데이트
   if (docId) {
-    const userKey = username.toLowerCase();
+    const userKey = username;
     const updateData = {};
     updateData[`${userKey}.ack`] = "확인완료";
 
@@ -538,7 +538,7 @@ function loadTable() {
 	    SBS_ING: { canDelete: false },
 	    // ...다른 계정 권한 정의...
 	  };
-	  const permissions = userPermissions[currentUser?.toLowerCase()] || { canDelete: true };
+	  const permissions = userPermissions[currentUser] || { canRegister: true, canDelete: true };
 
     const total = docs.length;  // ✅ 수정: 전체 문서 수가 아닌 필터링된 문서 수로
     docs.forEach((doc, index) => {
