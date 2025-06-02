@@ -242,38 +242,50 @@ function acknowledgeSingleAlarm(popupId, docId) {
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
-  if (!docId) {
-    console.warn("문서 ID가 없어 확인 상태를 업데이트할 수 없습니다.");
-    return;
-  }
-
-  // 2. 현재 로그인 사용자 가져오기
+  // 2. 로그인 사용자 확인
   const username = localStorage.getItem("username");
   if (!username) {
     console.warn("로그인 정보가 없어 알림 확인 처리를 할 수 없습니다.");
     return;
   }
 
-  // 3. Firestore 문서 내 현재 로그인 사용자 필드 ack를 '확인완료'로 변경
+  // 3. SBS_NQC 계정은 확인 상태 갱신하지 않음
+  if (username === "SBS_NQC") {
+    console.log("SBS_NQC 계정은 ack 상태를 갱신하지 않습니다.");
+    stopLoopingBeep();
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return;
+  }
+
+  // 4. 문서 ID 유효성 확인
+  if (!docId) {
+    console.warn("문서 ID가 없어 확인 상태를 업데이트할 수 없습니다.");
+    return;
+  }
+
+  // 5. 계정명을 수신사 이름으로 정규화
+  const normalizedUser = ["SBS_ING"].includes(username) ? "SBS" : username.toUpperCase();
+
+  // 6. 해당 수신사의 ack 상태만 '확인완료'로 갱신
   const updateData = {};
-  updateData[`${username}.ack`] = "확인완료";
+  updateData[`${normalizedUser}.ack`] = "확인완료";
 
   tableRef.doc(docId).update(updateData)
     .then(() => {
-      loadTable(); // UI 새로고침
+      loadTable(); // UI 갱신
     })
     .catch(err => {
       console.error("ack 상태 업데이트 실패:", err);
     });
 
-  // 4. 알람음 멈추기 및 AudioContext 상태 확인 후 재개
+  // 7. 알람음 정지 및 오디오 컨텍스트 재개
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 }
-
-
 	  
 
 function listenToAlarmStatus() {
