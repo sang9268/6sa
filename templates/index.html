@@ -220,30 +220,6 @@ function createAlarmPopup(message, popupId, docId) {
 
   const username = localStorage.getItem("username") || "";
   const allAccounts = ["KBS", "MBC", "SBS", "SBS_ING", "SBS_NQC", "MBN", "YTN", "OBS", "LGU+"];
-	
-  const popup = document.createElement("div");
-  popup.id = popupId;
-  popup.style.background = "white";
-  popup.style.padding = "20px";
-  popup.style.borderRadius = "12px";
-  popup.style.boxShadow = "0 0 12px rgba(0,0,0,0.3)";
-  popup.style.marginBottom = "10px";
-  popup.style.textAlign = "center";
-
- const optionsHTML = allAccounts.map(acc =>
-    `<option value="${acc}" ${acc === username ? "selected" : ""}>${acc}</option>`
-  ).join("");
-	
-  popup.innerHTML = `
-    <p class="alarm-text" style="font-size: 18px; font-weight: bold;">${message.replace(/\n/g, "<br>")}</p>
-    <p style="margin-top:10px;">⚙️ 확인 계정 선택:
-      <select id="ackUserSelect_${popupId}">${optionsHTML}</select>
-    </p>
-    <p>선택한 계정 기준으로 수신사 확인완료 처리됩니다.</p>
-    <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}', '${docId}')">✅ 확인</button>
-  `;
-
-  container.appendChild(popup);
 }
 
 // 개별 팝업 닫기 함수
