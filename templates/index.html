@@ -12,7 +12,7 @@
       apiKey: "",
       authDomain: "sabodo-82fa8.firebaseapp.com",
       projectId: "sabodo-82fa8",
-      storageBucket: "sabodo-82fa8.firebasestorage.app",
+      storageBucket: "sabodo-82fa8.firebasestorage.app",ㄲㄹ
       messagingSenderId: "411843694800",
       appId: "1:411843694800:web:94e40d6ec9f05cdd60ced5",
       measurementId: "G-CKBERJMFMG"
@@ -220,48 +220,32 @@ function createAlarmPopup(message, popupId, docId) {
 
   const username = localStorage.getItem("username") || "";
   const allAccounts = ["KBS", "MBC", "SBS", "SBS_ING", "SBS_NQC", "MBN", "YTN", "OBS", "LGU+"];
+
+  const popup = document.createElement("div");
+  popup.id = popupId;
+  popup.style.background = "white";
+  popup.style.padding = "20px";
+  popup.style.borderRadius = "12px";
+  popup.style.boxShadow = "0 0 12px rgba(0,0,0,0.3)";
+  popup.style.marginBottom = "10px";
+  popup.style.textAlign = "center";
+
+  const optionsHTML = allAccounts.map(account =>
+    `<option value="${account}" ${account === username ? "selected" : ""}>${account}</option>`
+  ).join("");
+
+  popup.innerHTML = `
+    <p class="alarm-text" style="font-size: 18px; font-weight: bold;">${message.replace(/\n/g, "<br>")}</p>
+    <p style="margin-top:10px;">⚙️ 확인 계정 선택:
+      <select id="ackUserSelect_${popupId}" style="margin-left:8px; font-size:16px;">${optionsHTML}</select>
+    </p>
+    <p style="margin-top:5px;">선택한 계정 기준으로 수신사 확인완료 처리됩니다.</p>
+    <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}', '${docId}')">✅ 확인</button>
+  `;
+
+  container.appendChild(popup);
 }
 
-// 개별 팝업 닫기 함수
-function acknowledgeSingleAlarm(popupId, docId) {
-  const popup = document.getElementById(popupId);
-  if (popup) popup.remove();
-
-  const selectEl = document.getElementById(`ackUserSelect_${popupId}`);
-  if (!selectEl) return;
-
-  const selectedUser = selectEl.value; // 드롭다운에서 선택된 계정
-  if (!selectedUser || !docId) return;
-
-  // SBS_NQC 계정은 무조건 ack 처리 안 함
-  if (selectedUser === "SBS_NQC") {
-    alert("⚠️ SBS_NQC 계정은 확인 처리가 되지 않습니다.");
-    stopLoopingBeep();
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-    return;
-  }
-
-  // SBS_ING → SBS로 정규화
-  const normalizedUser = (selectedUser === "SBS_ING") ? "SBS" : selectedUser;
-
-  const updateData = {};
-  updateData[`${normalizedUser}.ack`] = "확인완료";
-
-  tableRef.doc(docId).update(updateData)
-    .then(() => {
-      loadTable(); // UI 갱신
-    })
-    .catch(err => {
-      console.error("ack 상태 업데이트 실패:", err);
-    });
-
-  stopLoopingBeep();
-  if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-}
 
 	  
 
