@@ -230,38 +230,31 @@ function acknowledgeSingleAlarm(popupId, docId) {
   const selectEl = document.getElementById(`ackUserSelect_${popupId}`);
   if (!selectEl) return;
 
-  const selectedUser = selectEl.value; // 드롭다운에서 선택된 계정
+  const selectedUser = selectEl.value;
   if (!selectedUser || !docId) return;
 
-  // SBS_NQC 계정은 무조건 ack 처리 안 함
   if (selectedUser === "SBS_NQC") {
     alert("⚠️ SBS_NQC 계정은 확인 처리가 되지 않습니다.");
     stopLoopingBeep();
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
     return;
   }
 
-  // SBS_ING → SBS로 정규화
   const normalizedUser = (selectedUser === "SBS_ING") ? "SBS" : selectedUser;
 
-  const updateData = {};
-  updateData[`${normalizedUser}.ack`] = "확인완료";
+  const updateData = {
+    [`${normalizedUser}.ack`]: "확인완료",
+    ackUser: selectedUser  // ✅ 확인한 사용자 기록
+  };
 
   tableRef.doc(docId).update(updateData)
-    .then(() => {
-      loadTable(); // UI 갱신
-    })
-    .catch(err => {
-      console.error("ack 상태 업데이트 실패:", err);
-    });
+    .then(() => loadTable())
+    .catch(err => console.error("ack 상태 업데이트 실패:", err));
 
   stopLoopingBeep();
-  if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
 }
+
 
 	  
 
@@ -541,6 +534,9 @@ function loadTable() {
   tableRef.orderBy("createdAt", "desc").onSnapshot((snapshot) => {
     tbody.innerHTML = ""; // 테이블 초기화
 
+   const allDocs = snapshot.docs.filter(doc => !doc.data().hidden); // 전체 문서 (숨김 제외)
+
+
     const userPermissions = {
       SBS: { canDelete: false },
       SBS_NQC: { canDelete: false },
@@ -558,14 +554,23 @@ function loadTable() {
 
       if (data.hidden) return; // 숨김 문서 skip
 
+      // ✅ 행 번호 계산
+    const rowNumber = allDocs.findIndex(d => d.id === docId);
+    const displayNumber = allDocs.length - rowNumber;
+
       // ✅ 팝업 생성: 새로 추가된 문서일 때만
       if (change.type === "added") {
         const popupId = `popup_${docId}`;
         const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
-        if (!document.getElementById(popupId)) {
-          createAlarmPopup(popupMessage, popupId, docId);
-        }
-      }
+       const currentUser = localStorage.getItem("username") || "";
+       const currentUserUpper = currentUser.toUpperCase();
+       const ackedUser = (data.ackUser || "").toUpperCase();
+
+	  // ✅ 이미 내가 확인한 문서면 팝업 띄우지 않음
+	  if (ackedUser !== currentUserUpper) {
+	    createAlarmPopup(popupMessage, popupId, docId);
+	  }
+	}
 
       // ✅ 테이블 행 생성
       const tr = document.createElement("tr");
@@ -578,7 +583,7 @@ function loadTable() {
       tr.style.backgroundColor = bgColor;
 
       tr.innerHTML = `
-        <td></td>
+        <td>${displayNumber}</td>
         <td>${data.date || ''}</td>
         <td>${data.time || ''}</td>
         <td>${data.sender || ''}</td>
@@ -1386,9 +1391,9 @@ document.addEventListener("DOMContentLoaded", function () {
   <h3 style="margin-top: 0; color: #4CAF50;">📝 내용 등록</h3>
   <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; margin-bottom: 10px;" />
   <select id="inputSender" style="width: 100%; margin-bottom: 10px;">
-    <option value="SBS">SBS</option>
     <option value="KBS">KBS</option>
     <option value="MBC">MBC</option>
+    <option value="SBS">SBS</option>
     <option value="MBN">MBN</option>
     <option value="YTN">YTN</option>
     <option value="OBS">OBS</option>
