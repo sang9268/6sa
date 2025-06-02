@@ -595,22 +595,18 @@ function loadTable() {
     const displayNumber = allDocs.length - rowNumber;
 
       // ✅ 팝업 생성: 새로 추가된 문서일 때만
-	if (change.type === "added") {
-	  const popupId = `popup_${docId}`;
-	  const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
-	
-	  const currentUser = localStorage.getItem("username") || "";
-	  const currentUserUpper = currentUser.toUpperCase();
-	  const normalizedUser = ["SBS", "SBS_ING", "SBS_NQC"].includes(currentUserUpper) ? "SBS" : currentUserUpper;
-	
-	  const ackField = (data[normalizedUser] && data[normalizedUser].ack) || "미확인";
-	
-	  // ✅ 내 계정의 ack 값이 "미확인"일 때만 팝업 생성
-	  if (ackField !== "확인완료") {
+      if (change.type === "added") {
+        const popupId = `popup_${docId}`;
+        const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
+       const currentUser = localStorage.getItem("username") || "";
+       const currentUserUpper = currentUser.toUpperCase();
+       const ackedUser = (data.ackUser || "").toUpperCase();
+
+	  // ✅ 이미 내가 확인한 문서면 팝업 띄우지 않음
+	  if (ackedUser !== currentUserUpper) {
 	    createAlarmPopup(popupMessage, popupId, docId);
 	  }
 	}
-
 
       // ✅ 테이블 행 생성
       const tr = document.createElement("tr");
