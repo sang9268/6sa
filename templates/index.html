@@ -218,6 +218,9 @@ function stopLoopingBeep() {
 function createAlarmPopup(message, popupId, docId) {
   const container = document.getElementById("alarmPopupContainer");
 
+  const username = localStorage.getItem("username") || "";
+  const allAccounts = ["KBS", "MBC", "SBS", "SBS_ING", "SBS_NQC", "MBN", "YTN", "OBS", "LGU+"];
+	
   const popup = document.createElement("div");
   popup.id = popupId;
   popup.style.background = "white";
@@ -227,9 +230,16 @@ function createAlarmPopup(message, popupId, docId) {
   popup.style.marginBottom = "10px";
   popup.style.textAlign = "center";
 
+ const optionsHTML = allAccounts.map(acc =>
+    `<option value="${acc}" ${acc === username ? "selected" : ""}>${acc}</option>`
+  ).join("");
+	
   popup.innerHTML = `
     <p class="alarm-text" style="font-size: 18px; font-weight: bold;">${message.replace(/\n/g, "<br>")}</p>
-    <p>확인을 누르면 이 계정에서만 알림이 정지됩니다.</p>
+    <p style="margin-top:10px;">⚙️ 확인 계정 선택:
+      <select id="ackUserSelect_${popupId}">${optionsHTML}</select>
+    </p>
+    <p>선택한 계정 기준으로 수신사 확인완료 처리됩니다.</p>
     <button style="margin-top: 20px; padding: 10px 20px; font-size: 16px;" onclick="acknowledgeSingleAlarm('${popupId}', '${docId}')">✅ 확인</button>
   `;
 
@@ -238,20 +248,18 @@ function createAlarmPopup(message, popupId, docId) {
 
 // 개별 팝업 닫기 함수
 function acknowledgeSingleAlarm(popupId, docId) {
-  // 1. 팝업 닫기
   const popup = document.getElementById(popupId);
   if (popup) popup.remove();
 
-  // 2. 로그인 사용자 확인
-  const username = localStorage.getItem("username");
-  if (!username) {
-    console.warn("로그인 정보가 없어 알림 확인 처리를 할 수 없습니다.");
-    return;
-  }
+  const selectEl = document.getElementById(`ackUserSelect_${popupId}`);
+  if (!selectEl) return;
 
-  // 3. SBS_NQC 계정은 확인 상태 갱신하지 않음
-  if (username === "SBS_NQC") {
-    console.log("SBS_NQC 계정은 ack 상태를 갱신하지 않습니다.");
+  const selectedUser = selectEl.value; // 드롭다운에서 선택된 계정
+  if (!selectedUser || !docId) return;
+
+  // SBS_NQC 계정은 무조건 ack 처리 안 함
+  if (selectedUser === "SBS_NQC") {
+    alert("⚠️ SBS_NQC 계정은 확인 처리가 되지 않습니다.");
     stopLoopingBeep();
     if (audioCtx && audioCtx.state === "suspended") {
       audioCtx.resume();
@@ -259,16 +267,9 @@ function acknowledgeSingleAlarm(popupId, docId) {
     return;
   }
 
-  // 4. 문서 ID 유효성 확인
-  if (!docId) {
-    console.warn("문서 ID가 없어 확인 상태를 업데이트할 수 없습니다.");
-    return;
-  }
+  // SBS_ING → SBS로 정규화
+  const normalizedUser = (selectedUser === "SBS_ING") ? "SBS" : selectedUser;
 
-  // 5. 계정명을 수신사 이름으로 정규화
-  const normalizedUser = ["SBS_ING"].includes(username) ? "SBS" : username.toUpperCase();
-
-  // 6. 해당 수신사의 ack 상태만 '확인완료'로 갱신
   const updateData = {};
   updateData[`${normalizedUser}.ack`] = "확인완료";
 
@@ -280,12 +281,12 @@ function acknowledgeSingleAlarm(popupId, docId) {
       console.error("ack 상태 업데이트 실패:", err);
     });
 
-  // 7. 알람음 정지 및 오디오 컨텍스트 재개
   stopLoopingBeep();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 }
+
 	  
 
 function listenToAlarmStatus() {
@@ -1319,9 +1320,9 @@ document.addEventListener("DOMContentLoaded", function () {
 	  <h2 style="margin-bottom: 20px;">내용 등록</h2>
 	  <input id="inputContent" type="text" placeholder="내용 입력" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;" />
 	  <select id="inputSender" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
-	    <option value="SBS">SBS</option>
 	    <option value="KBS">KBS</option>
 	    <option value="MBC">MBC</option>
+	    <option value="SBS">SBS</option>
 	    <option value="MBN">MBN</option>
 	    <option value="YTN">YTN</option>
 	    <option value="OBS">OBS</option>
