@@ -878,9 +878,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* 수신사 영역의 '미확인 → 포함' 사이 선만 얇게 */
-  #logTable td:nth-child(n+5):nth-child(odd) {
-    border-right: 1px solid #ccc !important;
-  }
+#logTable td:nth-child(2n+5) {
+  border-right: 1px solid #ccc !important;
+}
 </style>
 
 
