@@ -223,39 +223,6 @@ function createAlarmPopup(message, popupId, docId) {
 }
 
 // 개별 팝업 닫기 함수
-function acknowledgeSingleAlarm(popupId, docId) {
-  const popup = document.getElementById(popupId);
-  if (popup) popup.remove();
-
-  const selectEl = document.getElementById(`ackUserSelect_${popupId}`);
-  if (!selectEl) return;
-
-  const selectedUser = selectEl.value;
-  if (!selectedUser || !docId) return;
-
-  if (selectedUser === "SBS_NQC") {
-    alert("⚠️ SBS_NQC 계정은 확인 처리가 되지 않습니다.");
-    stopLoopingBeep();
-    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
-    return;
-  }
-
-  const normalizedUser = (selectedUser === "SBS_ING") ? "SBS" : selectedUser;
-
-  const updateData = {
-    [`${normalizedUser}.ack`]: "확인완료",
-    ackUser: selectedUser  // ✅ 확인한 사용자 기록
-  };
-
-  tableRef.doc(docId).update(updateData)
-    .then(() => loadTable())
-    .catch(err => console.error("ack 상태 업데이트 실패:", err));
-
-  stopLoopingBeep();
-  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
-}
-
-
 	  
 
 function listenToAlarmStatus() {
@@ -594,7 +561,15 @@ function loadTable() {
           const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
           const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
           return `
-            <td><span class="ack-text ${ackClass} ${blinkClass}">${ackText}</span></td>
+          <td>
+	    <button 
+	      class="ack-toggle-button ${ackClass}" 
+	      onclick="toggleAck('${docId}', '${rcv}')"
+	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
+	    >
+	      ${ackText}
+	    </button>
+	  </td>
             <td><span class="exclude-text">${excludeText}</span></td>
           `;
         }).join('')}
