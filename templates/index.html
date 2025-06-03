@@ -19,6 +19,28 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+	let isLGUUser = false;
+	let normalizedCurrentUser = null; // 예: kbs, mbc 등
+	
+	firebase.auth().onAuthStateChanged(function(user) {
+	  if (user) {
+	    const email = user.email || "";
+	    const displayName = user.displayName || "";
+	
+	    isLGUUser = email.includes("lguplus") || displayName.includes("LGU");
+	
+	    if (!isLGUUser) {
+	      const match = email.match(/^(.+?)@/); // 예: kbs@sabodo.com → kbs
+	      if (match) normalizedCurrentUser = match[1].toLowerCase();
+	    }
+	
+	    loadTable(); // 로그인 후 테이블 로딩
+	  }
+	});
+
+
+	  
     const tableRef = db.collection("logTable");
     const alarmRef = db.collection("system").doc("alarmStatus"); // Firestore에서 알람 상태를 관리
 
@@ -562,13 +584,15 @@ function loadTable() {
           const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
           return `
 	   <td>
-	    <button 
-	      class="ack-toggle-button ${ackClass} ${blinkClass}" 
-	      onclick="toggleAck('${docId}', '${rcv}')"
-	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
-	    >
-	      ${ackText}
-	    </button>
+	<button 
+	  class="ack-toggle-button ${ackClass}" 
+	  data-receiver="${rcv}"
+	  onclick="toggleAck('${docId}', '${rcv}')"
+	  style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
+	>
+	  ${ackText}
+	</button>
+
 	  </td>
             <td><span class="exclude-text">${excludeText}</span></td>
           `;
@@ -597,6 +621,19 @@ function loadTable() {
     `;
     tbody.appendChild(fixedRow);
 
+   // ✅ 여기에 깜빡임 적용 추가!
+	if (isLGUUser) {
+	  // ✅ LGU+는 전체 미확인 버튼 깜빡
+	  document.querySelectorAll('.ack-pending').forEach(btn => {
+	    btn.style.animation = "blink 1.2s infinite";
+	  });
+	} else if (normalizedCurrentUser) {
+	  // ✅ 방송사는 자기 수신 열만 깜빡
+	  document.querySelectorAll(`.ack-pending[data-receiver="${normalizedCurrentUser}"]`).forEach(btn => {
+	    btn.style.animation = "blink 1.2s infinite";
+	  });
+	}
+	  
     applyExcludeStyles();
   });
 }
