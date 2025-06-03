@@ -870,6 +870,10 @@ document.addEventListener("DOMContentLoaded", function () {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
+#logTable th,
+#logTable td {
+  border: 2px solid #999;
+}
 
 
 /* 1~4열 헤더만 글자 크기 및 굵기 키우기 */
@@ -1234,6 +1238,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	    📥 내용 등록
 	  </button>
 	  <div style="display: flex; align-items: center; gap: 10px;">
+		<div id="infoNotice">※ 1단계 적용 완료 / 관리는 LGU+에서 수행합니다.</div>
 		<button id="refreshButton" style="
 		  padding: 12px 24px;
 		  font-size: 18px;
@@ -1468,6 +1473,20 @@ document.addEventListener("DOMContentLoaded", function () {
   color: #4caf50;
 }
 </style>
+
+<style>
+  #infoNotice {
+    font-size: 0.95rem;
+    color: #666;
+    background-color: #f9f9f9;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    border-left: 4px solid #ff9800;  /* 주황 포인트 */
+    width: fit-content;
+    border-radius: 4px;
+  }
+</style>
+
 	
 <style>
 .logo-img {
