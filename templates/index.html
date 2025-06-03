@@ -870,19 +870,6 @@ document.addEventListener("DOMContentLoaded", function () {
   min-width: 0;          /* 최소 너비 제한 해제 */
 }
 
-<style>
-  /* 전체 테두리 굵게 */
-  #logTable th,
-  #logTable td {
-    border: 2px solid #999;
-  }
-
-  /* 수신사 영역의 '미확인 → 포함' 사이 선만 얇게 */
-#logTable td:nth-child(2n+5) {
-  border-right: 1px solid #ccc !important;
-}
-</style>
-
 
 
 /* 1~4열 헤더만 글자 크기 및 굵기 키우기 */
@@ -1250,7 +1237,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		<button id="refreshButton" style="
 		  padding: 12px 24px;
 		  font-size: 18px;
-		  background-color: #607d8b;
+		  background-color: #ff9800;  /* 주황색 */
 		  color: white;
 		  border-radius: 8px;
 		  border: none;
