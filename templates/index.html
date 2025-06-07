@@ -25,7 +25,15 @@
 	let isShowingAll = false; // false = 기본 보기
 	let isAlarmActive = false; // 기본값: 정지 상태
 
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    currentUsername = user.email.split('@')[0];
+    loadTable(); // ✅ 인증 후 테이블 생성
+  }
+});
 
+
+	  
     // 로그인 상태 확인 함수
 function checkLogin() {
   const currentUser = localStorage.getItem("username");
@@ -236,15 +244,26 @@ function listenToAlarmStatus() {
     const now = Date.now();
     const alarmStart = alarmStatus.timestamp || now;
 
-    // 아직 확인하지 않았고 5분 이내면 알람 표시
-    if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart)) {
-        initializeAudioContext();
-        playLoopingBeep();
-        showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
-    } else {
-      // hideAlarmPopup();
-      stopLoopingBeep();
-    }
+	if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart)) {
+	  initializeAudioContext();
+	
+	  // ✅ 공통 알람음 재생
+	  playLoopingBeep();
+	
+	  if (currentUsername === 'SBS_NQC') {
+	    // ✅ 팝업은 생략, 3초 후 알람음 자동 정지
+	    setTimeout(() => {
+	      stopLoopingBeep();
+	    }, 3000);
+	  } else {
+	    // ✅ 일반 사용자: 팝업 표시, 알람음 계속
+	    showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
+	  }
+	
+	} else {
+	  // 🔕 조건 충족 안 될 경우 알람 중단
+	  stopLoopingBeep();
+	}
   });
 }
 
@@ -564,7 +583,7 @@ function loadTable() {
 	   <td>
 	    <button 
 	      class="ack-toggle-button ${ackClass} ${blinkClass}" 
-	      onclick="toggleAck('${docId}', '${rcv}')"
+	     ${currentUserUpper === 'SBS_NQC' ? 'disabled style="opacity: 0.5; cursor: not-allowed;" title="SBS_NQC는 확인 상태 변경 불가"' : `onclick="toggleAck('${docId}', '${rcv}')"`}
 	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
 	    >
 	      ${ackText}
@@ -1162,8 +1181,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* 미확인 - 노란색 배경, 검정 글씨 */
 .ack-pending {
-  background-color: #9e9e9e;
+  background-color: #757575; /* 진회색 */
   color: white;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 
