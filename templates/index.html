@@ -1174,32 +1174,32 @@ document.addEventListener("DOMContentLoaded", function () {
 /* 확인 상태 텍스트 네모박스 스타일 */
 .ack-text {
   display: inline-block;
-  padding: 6px 14px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-weight: bold;
   user-select: none;
   cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
-  border: none;
-  font-size: 13px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* 미확인 - 노란색 배경, 검정 글씨 */
-.ack-pending {
-  background-color: #757575; /* 진회색 */
-  color: white;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  text-align: center;
+  border: 2px solid transparent;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  min-width: 90px;
 }
 
+/* 미확인 상태: 진회색 배경, 노란 테두리 */
+.ack-pending {
+  background-color: #757575;
+  color: white;
+  border-color: #ffeb3b;  /* 노란색 테두리 */
+}
 
-/* 확인완료 - 초록색 배경, 흰색 글씨 */
+/* 확인완료 상태: 초록 배경, 진한 초록 테두리 */
 .ack-confirmed {
   background-color: #4caf50;
   color: white;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  border-color: #2e7d32;  /* 진한 초록 */
 }
-
 /* 마우스 오버 효과 */
 .ack-text:hover {
   filter: brightness(1.1);
