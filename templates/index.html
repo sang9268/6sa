@@ -228,7 +228,8 @@ function createAlarmPopup(message, popupId, docId) {
 function listenToAlarmStatus() {
   alarmRef.onSnapshot(doc => {
     const alarmStatus = doc.data();
-    const username = localStorage.getItem("username");
+    const username = localStorage.getItem("username") || "";
+    const currentUserUpper = username.toUpperCase();
     if (!alarmStatus || !username) return;
 
     const acknowledgedKey = `alarmAcknowledged_${username}`;
@@ -240,10 +241,16 @@ if (alarmStatus.isAlarmActive && (!acknowledgedAt || acknowledgedAt < alarmStart
   initializeAudioContext();
   playLoopingBeep();
 
-    // ✅ 모든 계정 공통: 알람음 5초 후 자동 정지
-      setTimeout(() => {
-        stopLoopingBeep();
-      }, 5000);
+	let alarmTimeout = null;
+	
+	if (alarmTimeout) clearTimeout(alarmTimeout);
+	alarmTimeout = setTimeout(() => {
+	  stopLoopingBeep();
+	  alarmTimeout = null;
+	}, 5000);
+
+// 알림 수신 기록 저장 (중복 방지)
+  localStorage.setItem(acknowledgedKey, String(Date.now()));
 
   if (currentUserUpper !== 'SBS_NQC') {
     showAlarmPopup(alarmStatus.alarmMessage || "📡 자료 송출 알림이 발생했습니다!");
