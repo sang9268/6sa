@@ -1191,19 +1191,16 @@ document.addEventListener("DOMContentLoaded", function () {
 .ack-pending {
   background-color: #757575;
   color: white;
-  border-color: #ffeb3b;  /* 노란색 테두리 */
+border: 2px solid black;  /* ✅ 검정색 테두리 */
 }
 
 /* 확인완료 상태: 초록 배경, 진한 초록 테두리 */
 .ack-confirmed {
   background-color: #4caf50;
   color: white;
-  border-color: #2e7d32;  /* 진한 초록 */
+border: 2px solid black;  /* ✅ 검정색 테두리 */
 }
-/* 마우스 오버 효과 */
-.ack-text:hover {
-  filter: brightness(1.1);
-}  
+
 
 /* 포함/제외 텍스트 네모박스 스타일 */
 .exclude-text {
