@@ -578,15 +578,18 @@ function loadTable() {
 
 	  const isMyColumn = (normalizedCurrentUser === rcv);
 	
-	  const buttonAttributes = isMyColumn
+	 // ✅ SBS_NQC 예외 처리: 수정 가능하지만 버튼은 비활성화
+	  const isSbsNqc = currentUserUpper === "SBS_NQC";
+	
+	  const buttonAttributes = (isMyColumn && !isSbsNqc)
 	    ? `onclick="toggleAck('${docId}', '${rcv}')"`
-	    : `disabled style="opacity:0.5;cursor:not-allowed;" title='본인 수신사만 확인 가능'`;
+	    : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
 		
           return `
 	   <td>
 	    <button 
 	      class="ack-toggle-button ${ackClass} ${blinkClass}" 
-	     ${currentUserUpper === 'SBS_NQC' ? 'disabled style="opacity: 0.5; cursor: not-allowed;" title="SBS_NQC는 확인 상태 변경 불가"' : `onclick="toggleAck('${docId}', '${rcv}')"`}
+              ${buttonAttributes}
 	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
 	    >
 	      ${ackText}
