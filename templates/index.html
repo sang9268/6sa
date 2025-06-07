@@ -25,14 +25,6 @@
 	let isShowingAll = false; // false = 기본 보기
 	let isAlarmActive = false; // 기본값: 정지 상태
 
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    currentUsername = user.email.split('@')[0];
-    loadTable(); // ✅ 인증 후 테이블 생성
-  }
-});
-
-
 	  
     // 로그인 상태 확인 함수
 function checkLogin() {
