@@ -771,8 +771,10 @@ tableRef.add(rowData).then((docRef) => {
     timestamp: Date.now()
   });
 
-  loadTable();
   document.getElementById("inputContent").value = "";
+
+  // ✅ 팝업 닫기 추가
+  closeContentPopup();
 });
 
 }
