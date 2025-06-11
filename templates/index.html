@@ -734,7 +734,7 @@ function registerContent() {
     time: time,
     content: content,
     sender: sender,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    createdAt: new Date(), // ✅ 클라이언트 기준 시간으로 즉시 반영
     hidden: false,
     broadcastStatus: "송출전"
   };
@@ -757,26 +757,27 @@ const isIncluded = isSender || isCurrentUser || isIncludedChecked;
   });
 
 tableRef.add(rowData).then((docRef) => {
-        const docId = docRef.id;  // 새로 생성된 문서 ID 얻기
-	const popupId = `alarm_${Date.now()}`;  // 고유 팝업 ID 생성
-	const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!
-	📑 내용: ${content}
-	📤 송출사: ${sender}`;
-	
-// createAlarmPopup(popupMessage, popupId, docId);
-	
-   alarmRef.set({
+  const docId = docRef.id;
+  const popupId = `alarm_${Date.now()}`;
+  const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!
+📑 내용: ${content}
+📤 송출사: ${sender}`;
+
+  // 알람 전송
+  return alarmRef.set({
     isAlarmActive: true,
     alarmMessage: popupMessage,
     timestamp: Date.now()
   });
-
+}).then(() => {
+  // 입력창 정리 및 팝업 닫기
   document.getElementById("inputContent").value = "";
-
-  // ✅ 팝업 닫기 추가
   closeContentPopup();
-});
 
+  // ✅ 전체 테이블 다시 로드 (방금 등록한 항목 포함)
+  loadTable();
+});
+	
 }
 
 
