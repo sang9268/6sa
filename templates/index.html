@@ -774,8 +774,10 @@ tableRef.add(rowData).then((docRef) => {
   document.getElementById("inputContent").value = "";
   closeContentPopup();
 
-  // ✅ 전체 테이블 다시 로드 (방금 등록한 항목 포함)
-  loadTable();
+  // ✅ 1초 후 브라우저 새로고침 (너무 빠르면 UI 정리가 안 될 수 있어 약간의 딜레이 줌)
+  setTimeout(() => {
+    window.location.reload();
+  }, 1000);
 });
 	
 }
