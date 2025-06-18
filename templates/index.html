@@ -518,7 +518,7 @@ function loadTable() {
   };
   const permissions = userPermissions[currentUserUpper] || { canDelete: true };
 
-  const receivers = ["KBS", "MBC", "SBS", "YTN", "JTBC", "연합뉴스TV"];
+  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
 
   tableRef.orderBy("createdAt", "desc").onSnapshot((snapshot) => {
     // ✅ 알람 팝업 처리만 docChanges에서
@@ -602,6 +602,18 @@ function loadTable() {
         dateCounts[data.date] = (dateCounts[data.date] || 0) + 1;
       }
     });
+
+    // ✅ 고정된 첫 행 추가
+    const fixedRow = document.createElement("tr");
+    fixedRow.innerHTML = `
+      <td>고정</td>
+      <td>2025-xx-xx</td>
+      <td>00:00:00</td>
+      <td>LGU+</td>
+      <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
+      <td colspan="13" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 유선연락 제외 방송사 : KBS, MBC, SBS, MBN .</td>
+    `;
+    tbody.appendChild(fixedRow);
 
     applyExcludeStyles();
   });
