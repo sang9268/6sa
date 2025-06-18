@@ -505,56 +505,50 @@ function acknowledgeAlarm() {
 
 // 데이터 로드 함수
 function loadTable() {
-  const dateCounts = {};
+  const tbody = document.getElementById("tableBody");
   const currentUser = localStorage.getItem("username") || "";
   const currentUserUpper = currentUser.toUpperCase();
-  const normalizedCurrentUser = ["SBS", "SBS_NQC", "SBS_ING"].includes(currentUserUpper) ? "SBS" : currentUserUpper;
-  const receivers = ["KBS", "MBC", "SBS", "MBN", "YTN", "OBS"];
+  const normalizedCurrentUser = currentUserUpper.replace(/\s+/g, '');
+  const dateCounts = {};
 
-  const tbody = document.getElementById("tableBody");
+  const userPermissions = {
+    SBS: { canDelete: false },
+    SBS_NQC: { canDelete: false },
+    SBS_ING: { canDelete: false },
+  };
+  const permissions = userPermissions[currentUserUpper] || { canDelete: true };
+
+  const receivers = ["KBS", "MBC", "SBS", "YTN", "JTBC", "연합뉴스TV"];
 
   tableRef.orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-    tbody.innerHTML = ""; // 테이블 초기화
-
-   const allDocs = snapshot.docs.filter(doc => !doc.data().hidden); // 전체 문서 (숨김 제외)
-
-
-    const userPermissions = {
-      SBS: { canDelete: false },
-      SBS_NQC: { canDelete: false },
-      SBS_ING: { canDelete: false },
-      // 필요한 경우 다른 계정 추가
-    };
-    const permissions = userPermissions[currentUserUpper] || { canRegister: true, canDelete: true };
-
-    let index = 0;
-
+    // ✅ 알람 팝업 처리만 docChanges에서
     snapshot.docChanges().forEach((change) => {
-      const doc = change.doc;
-      const data = doc.data();
-      const docId = doc.id;
-
-      if (data.hidden) return; // 숨김 문서 skip
-
-      // ✅ 행 번호 계산
-    const rowNumber = allDocs.findIndex(d => d.id === docId);
-    const displayNumber = allDocs.length - rowNumber;
-
-      // ✅ 팝업 생성: 새로 추가된 문서일 때만
       if (change.type === "added") {
+        const doc = change.doc;
+        const data = doc.data();
+        const docId = doc.id;
+
+        if (data.hidden) return;
+
         const popupId = `popup_${docId}`;
         const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
-       const currentUser = localStorage.getItem("username") || "";
-       const currentUserUpper = currentUser.toUpperCase();
-       const ackedUser = (data.ackUser || "").toUpperCase();
+        const ackedUser = (data.ackUser || "").toUpperCase();
 
-	  // ✅ 이미 내가 확인한 문서면 팝업 띄우지 않음
-	  if (ackedUser !== currentUserUpper) {
-	    createAlarmPopup(popupMessage, popupId, docId);
-	  }
-	}
+        if (ackedUser !== currentUserUpper) {
+          createAlarmPopup(popupMessage, popupId, docId);
+        }
+      }
+    });
 
-      // ✅ 테이블 행 생성
+    // ✅ 테이블 전체 갱신
+    tbody.innerHTML = "";
+    const allDocs = snapshot.docs.filter(doc => !doc.data().hidden);
+
+    allDocs.forEach((doc, index) => {
+      const data = doc.data();
+      const docId = doc.id;
+      const displayNumber = allDocs.length - index;
+
       const tr = document.createElement("tr");
       tr.setAttribute("data-row-id", docId);
 
@@ -575,30 +569,31 @@ function loadTable() {
           const excludeText = (data[rcv] && data[rcv].exclude) || '포함';
           const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
           const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
+          const isMyColumn = (normalizedCurrentUser === rcv);
+          const isSbsNqc = currentUserUpper === "SBS_NQC";
 
-	  const isMyColumn = (normalizedCurrentUser === rcv);
-	
-	 // ✅ SBS_NQC 예외 처리: 수정 가능하지만 버튼은 비활성화
-	  const isSbsNqc = currentUserUpper === "SBS_NQC";
-	
-	  const buttonAttributes = (isMyColumn && !isSbsNqc)
-	    ? `onclick="toggleAck('${docId}', '${rcv}')"`
-	    : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
-		
+          const buttonAttributes = (isMyColumn && !isSbsNqc)
+            ? `onclick="toggleAck('${docId}', '${rcv}')"`
+            : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
+
           return `
-	   <td>
-	    <button 
-	      class="ack-toggle-button ${ackClass} ${blinkClass}" 
-              ${buttonAttributes}
-	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
-	    >
-	      ${ackText}
-	    </button>
-	  </td>
+            <td>
+              <button 
+                class="ack-toggle-button ${ackClass} ${blinkClass}" 
+                ${buttonAttributes}
+                style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
+              >
+                ${ackText}
+              </button>
+            </td>
             <td><span class="exclude-text">${excludeText}</span></td>
           `;
         }).join('')}
-        <td><button onclick="deleteRowById('${docId}')" ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제</button></td>
+        <td>
+          <button onclick="deleteRowById('${docId}')" 
+            ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제
+          </button>
+        </td>
       `;
 
       tbody.appendChild(tr);
@@ -606,25 +601,12 @@ function loadTable() {
       if (data.date) {
         dateCounts[data.date] = (dateCounts[data.date] || 0) + 1;
       }
-
-      index++;
     });
-
-    // ✅ 고정된 첫 행 추가
-    const fixedRow = document.createElement("tr");
-    fixedRow.innerHTML = `
-      <td>고정</td>
-      <td>2025-xx-xx</td>
-      <td>00:00:00</td>
-      <td>LGU+</td>
-      <td>🛠 내용 등록 박스를 입력하시고 등록버튼을 누르시면 자동으로 입력됩니다.(첫 행은 고정으로 사용하겠습니다.)</td>
-      <td colspan="13" style="color:blue;">수신사에서는 내용 확인 시 확인버튼을 눌러주세요. / 유선연락 제외 방송사 : KBS, SBS .</td>
-    `;
-    tbody.appendChild(fixedRow);
 
     applyExcludeStyles();
   });
 }
+
 
 function applyExcludeStyles() {
   document.querySelectorAll('.exclude-text').forEach(el => {
