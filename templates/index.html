@@ -529,146 +529,86 @@ function loadTable() {
 
     let index = 0;
 
-// ✅ 알람 팝업: 새 문서가 추가되었을 때만 처리
-snapshot.docChanges().forEach((change) => {
-  if (change.type === "added") {
-    const doc = change.doc;
-    const data = doc.data();
-    const docId = doc.id;
+    snapshot.docChanges().forEach((change) => {
+      const doc = change.doc;
+      const data = doc.data();
+      const docId = doc.id;
 
-    if (data.hidden) return;
+      if (data.hidden) return; // 숨김 문서 skip
 
-    const popupId = `popup_${docId}`;
-    const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
-    const currentUser = localStorage.getItem("username") || "";
-    const currentUserUpper = currentUser.toUpperCase();
-    const ackedUser = (data.ackUser || "").toUpperCase();
+      // ✅ 행 번호 계산
+    const rowNumber = allDocs.findIndex(d => d.id === docId);
+    const displayNumber = allDocs.length - rowNumber;
 
-    if (ackedUser !== currentUserUpper) {
-      createAlarmPopup(popupMessage, popupId, docId);
-    }
-  }
-});
+      // ✅ 팝업 생성: 새로 추가된 문서일 때만
+      if (change.type === "added") {
+        const popupId = `popup_${docId}`;
+        const popupMessage = `📡 6사보도 자료송출이 등록되었습니다!\n📑 내용: ${data.content}\n📤 송출사: ${data.sender}`;
+       const currentUser = localStorage.getItem("username") || "";
+       const currentUserUpper = currentUser.toUpperCase();
+       const ackedUser = (data.ackUser || "").toUpperCase();
 
-// ✅ 전체 문서 기준으로 테이블 렌더링
-const tbody = document.getElementById("tableBody");
-tbody.innerHTML = "";
-const allDocs = snapshot.docs.filter(doc => !doc.data().hidden);
+	  // ✅ 이미 내가 확인한 문서면 팝업 띄우지 않음
+	  if (ackedUser !== currentUserUpper) {
+	    createAlarmPopup(popupMessage, popupId, docId);
+	  }
+	}
 
-allDocs.forEach((doc, index) => {
-  const data = doc.data();
-  const docId = doc.id;
-  const displayNumber = allDocs.length - index;
+      // ✅ 테이블 행 생성
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-row-id", docId);
 
-  const tr = document.createElement("tr");
-  tr.setAttribute("data-row-id", docId);
+      const status = data.broadcastStatus || "송출전";
+      let bgColor = "#fffbe6";
+      if (status === "송출중") bgColor = "#ffcccc";
+      else if (status === "송출후") bgColor = "#dcdcdc";
+      tr.style.backgroundColor = bgColor;
 
-  const status = data.broadcastStatus || "송출전";
-  let bgColor = "#fffbe6";
-  if (status === "송출중") bgColor = "#ffcccc";
-  else if (status === "송출후") bgColor = "#dcdcdc";
-  tr.style.backgroundColor = bgColor;
+      tr.innerHTML = `
+        <td>${displayNumber}</td>
+        <td>${data.date || ''}</td>
+        <td>${data.time || ''}</td>
+        <td>${data.sender || ''}</td>
+        <td>${data.content || ''}</td>
+        ${receivers.map(rcv => {
+          const ackText = (data[rcv] && data[rcv].ack) || '미확인';
+          const excludeText = (data[rcv] && data[rcv].exclude) || '포함';
+          const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
+          const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
 
-  tr.innerHTML = `
-    <td>${displayNumber}</td>
-    <td>${data.date || ''}</td>
-    <td>${data.time || ''}</td>
-    <td>${data.sender || ''}</td>
-    <td>${data.content || ''}</td>
-    ${receivers.map(rcv => {
-      const ackText = (data[rcv] && data[rcv].ack) || '미확인';
-      const excludeText = (data[rcv] && data[rcv].exclude) || '포함';
-      const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
-      const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
-      const isMyColumn = (normalizedCurrentUser === rcv);
-      const isSbsNqc = currentUserUpper === "SBS_NQC";
-      const buttonAttributes = (isMyColumn && !isSbsNqc)
-        ? `onclick="toggleAck('${docId}', '${rcv}')"`
-        : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
-
-      return `
-        <td>
-          <button 
-            class="ack-toggle-button ${ackClass} ${blinkClass}" 
-            ${buttonAttributes}
-            style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
-          >
-            ${ackText}
-          </button>
-        </td>
-        <td><span class="exclude-text">${excludeText}</span></td>
+	  const isMyColumn = (normalizedCurrentUser === rcv);
+	
+	 // ✅ SBS_NQC 예외 처리: 수정 가능하지만 버튼은 비활성화
+	  const isSbsNqc = currentUserUpper === "SBS_NQC";
+	
+	  const buttonAttributes = (isMyColumn && !isSbsNqc)
+	    ? `onclick="toggleAck('${docId}', '${rcv}')"`
+	    : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
+		
+          return `
+	   <td>
+	    <button 
+	      class="ack-toggle-button ${ackClass} ${blinkClass}" 
+              ${buttonAttributes}
+	      style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
+	    >
+	      ${ackText}
+	    </button>
+	  </td>
+            <td><span class="exclude-text">${excludeText}</span></td>
+          `;
+        }).join('')}
+        <td><button onclick="deleteRowById('${docId}')" ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제</button></td>
       `;
-    }).join('')}
-    <td><button onclick="deleteRowById('${docId}')" ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제</button></td>
-  `;
 
-  tbody.appendChild(tr);
+      tbody.appendChild(tr);
 
-  if (data.date) {
-    dateCounts[data.date] = (dateCounts[data.date] || 0) + 1;
-  }
-});
+      if (data.date) {
+        dateCounts[data.date] = (dateCounts[data.date] || 0) + 1;
+      }
 
-
-// ✅ 전체 문서 기준으로 테이블 그리기
-const allDocs = snapshot.docs.filter(doc => !doc.data().hidden);
-tbody.innerHTML = ""; // 테이블 초기화
-
-allDocs.forEach((doc, index) => {
-  const data = doc.data();
-  const docId = doc.id;
-  const displayNumber = allDocs.length - index;
-
-  const tr = document.createElement("tr");
-  tr.setAttribute("data-row-id", docId);
-
-  const status = data.broadcastStatus || "송출전";
-  let bgColor = "#fffbe6";
-  if (status === "송출중") bgColor = "#ffcccc";
-  else if (status === "송출후") bgColor = "#dcdcdc";
-  tr.style.backgroundColor = bgColor;
-
-  tr.innerHTML = `
-    <td>${displayNumber}</td>
-    <td>${data.date || ''}</td>
-    <td>${data.time || ''}</td>
-    <td>${data.sender || ''}</td>
-    <td>${data.content || ''}</td>
-    ${receivers.map(rcv => {
-      const ackText = (data[rcv] && data[rcv].ack) || '미확인';
-      const excludeText = (data[rcv] && data[rcv].exclude) || '포함';
-      const ackClass = ackText === '확인완료' ? 'ack-confirmed' : 'ack-pending';
-      const blinkClass = (ackText !== '확인완료' && rcv === normalizedCurrentUser) ? 'blink' : '';
-
-      const isMyColumn = (normalizedCurrentUser === rcv);
-      const isSbsNqc = currentUserUpper === "SBS_NQC";
-      const buttonAttributes = (isMyColumn && !isSbsNqc)
-        ? `onclick="toggleAck('${docId}', '${rcv}')"`
-        : `disabled style="opacity: 0.5; cursor: not-allowed;" title="수정 권한 없음"`;
-
-      return `
-        <td>
-          <button 
-            class="ack-toggle-button ${ackClass} ${blinkClass}" 
-            ${buttonAttributes}
-            style="padding: 4px 10px; border-radius: 6px; font-weight: bold;"
-          >
-            ${ackText}
-          </button>
-        </td>
-        <td><span class="exclude-text">${excludeText}</span></td>
-      `;
-    }).join('')}
-    <td><button onclick="deleteRowById('${docId}')" ${permissions.canDelete ? '' : 'disabled style="opacity:0.5;cursor:not-allowed"'}>행 삭제</button></td>
-  `;
-
-  tbody.appendChild(tr);
-
-  if (data.date) {
-    dateCounts[data.date] = (dateCounts[data.date] || 0) + 1;
-  }
-});
-
+      index++;
+    });
 
     // ✅ 고정된 첫 행 추가
     const fixedRow = document.createElement("tr");
