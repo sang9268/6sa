@@ -67,7 +67,7 @@
     const db = firebase.firestore();
     const tableRef = db.collection("logTable");
 
-    tableRef.orderBy("createdAt", "desc").get().then(snapshot => {
+    tableRef.orderBy("createdAt", "desc").limit(50).get().then(snapshot => {
       const tbody = document.querySelector("#allTable tbody");
       const dateCounts = {};
       let index = snapshot.size;
